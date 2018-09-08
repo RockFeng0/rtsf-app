@@ -21,27 +21,7 @@ import os,re
 from appium import webdriver
 from multiprocessing import Pool,freeze_support
 
-def get_apk_capabilities(apk_abs_path, aapt_exe_4path = "aapt"):
-    capabilities = {}
-    if not os.path.isfile(apk_abs_path):
-        return capabilities
-    
-    regx_pkg_info = re.compile('([\w]*)=\'([\w\.]*)\'')
-    with os.popen(r'%s dump badging %s' %(aapt_exe_4path, apk_abs_path)) as f:
-        pkg_info_lines = list(f.readlines())        
-        apk_package = {"package":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "package:" in line}
-        apk_launchable = {"launchable":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "launchable-activity:" in line}
-                
-    capabilities = {
-        'platformName': 'Android',
-        'deviceName': None,
-        'platformVersion': None,
-        'app': apk_abs_path,
-        'appPackage': apk_package["name"],
-        'appWaitPackage': apk_package["name"],
-        'appActivity': apk_launchable["name"],
-    }
-    return capabilities
+
     
 def getAndroidDeviceDesiredInfo(apklocation=None, adb_exe_4path=None, aapt_exe_4path = None):
     ''' Get the data of all connected android device info and apk's capabilities.

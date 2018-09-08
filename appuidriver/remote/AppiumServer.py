@@ -18,8 +18,7 @@ UI and Web Http automation frame for python.
 
 '''
 
-import os,requests,re
-import subprocess
+import subprocess,requests
 from rtsf.p_common import  IntelligentWaitUtils
 
 class AppiumServer:
@@ -39,55 +38,6 @@ class AppiumServer:
         '''
         self.__port = port        
         self.appium_cmd = [node_exe_full_path, appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
-
-    @staticmethod
-    def get_devices_info(adb_exe_full_path="adb"):
-        ''' get devices id form parsed command `adb devices`
-        @param adb_exe_full_path: full path of executable adb, default is adb if ENV have been set. 
-            
-        '''
-        devices = []
-        # 读取设备 id
-        os.popen(adb_exe_full_path + " start-server").close()
-        with os.popen(adb_exe_full_path + " devices") as f:
-            device_ids = f.readlines()[1:-1]
-        
-        if not device_ids:
-            print("No device is connected.")
-            return devices
-        
-        devices_info = {}                  
-        regx_prop = re.compile('([\w\.]+)=(.*)')        
-        for i in device_ids:
-            deviceId,deviceStatus = i.split()        
-            if deviceStatus != "device":
-                print("Waring: %s" %i)
-                continue
-            
-            with os.popen('%s -s %s shell cat /system/build.prop' %(adb_exe_full_path, deviceId)) as f:
-                properties = {}                
-                for prop in [dict(regx_prop.findall(line)) for line in f.readlines() if "=" in line]:
-                    properties.update(prop)
-                pad_ip = properties.get("dhcp.wlan0.ipaddress")
-                pad_type = properties.get("ro.product.model")
-                pad_version = properties.get("ro.build.display.id")
-                pad_cpu = properties.get("ro.product.cpu.abi")
-                android_version = properties.get("ro.build.version.release")
-                android_api_version = properties.get("ro.build.version.sdk") 
-            
-            with os.popen('%s -s %s shell cat /proc/version' %(adb_exe_full_path, deviceId)) as f:
-                linux_version = f.read().strip()
-            
-            devices_info[deviceId] ={
-                'ip':pad_ip,
-                'model':pad_type,
-                'cpu':pad_cpu,
-                'pad_version':pad_version,            
-                'android_version':android_version,
-                'android_api_version':android_api_version,
-                'linux_version':linux_version,
-                }
-        return devices_info
     
     def bind_device(self, device_id, timeout = 120000,):
         ''' appium server bind to device.
