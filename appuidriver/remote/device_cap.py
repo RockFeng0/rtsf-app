@@ -36,7 +36,11 @@ class Android(object):
         
         regx_pkg_info = re.compile('([\w]*)=\'([\w\.]*)\'')
         pkg_info_lines = list(cls.__command(r'%s dump badging %s' %(aapt_exe_4path, apk_abs_path)))
-        apk_package = {"package":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "package:" in line}
+        
+        # e.g. {'package': {'versionCode': '', 'name': 'io.appium.android.apis', 'versionName': ''}}
+        apk_package = {"package":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "package:" in line}        
+                
+        # e.g. {'launchable': {'label': '', 'name': 'io.appium.android.apis.ApiDemos', 'icon': ''}}
         apk_launchable = {"launchable":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "launchable-activity:" in line}
                     
         capabilities = {
@@ -44,9 +48,9 @@ class Android(object):
             'deviceName': None,
             'platformVersion': None,
             'app': apk_abs_path,
-            'appPackage': apk_package["name"],
-            'appWaitPackage': apk_package["name"],
-            'appActivity': apk_launchable["name"],
+            'appPackage': apk_package["package"]["name"],
+            'appWaitPackage': apk_package["package"]["name"],
+            'appActivity': apk_launchable["launchable"]["name"],
         }
         return capabilities
 
@@ -56,16 +60,12 @@ class Android(object):
         @param adb_exe_full_path: full path of executable `adb.exe`, default is `adb` if ENV have been set.
         @return: dict of devices infomation. formation is {device_id: device_info}
         '''
-        devices = []
-        # 读取设备 id
-        cmd_start_server = adb_exe_full_path + " start-server"
-        cmd_devices = adb_exe_full_path + " devices"        
-        
-        cls.__command(cmd_start_server)
-        device_ids = cls.__command(cmd_devices)[1:-1]        
+         
+        cls.__command(adb_exe_full_path + " start-server")        
+        device_ids = cls.__command(adb_exe_full_path + " devices")[1:-1]        
         if not device_ids:
             print("No device is connected.")
-            return devices
+            return {}
         
         devices_info = {}                  
         regx_prop = re.compile('([\w\.]+)=(.*)')        
@@ -108,3 +108,4 @@ class Android(object):
             else:
                 result = f.read()
         return result
+
