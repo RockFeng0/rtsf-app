@@ -27,7 +27,8 @@ class Android(object):
     def gen_capabilities(cls, apk_abs_path, aapt_exe_4path = "aapt"):
         ''' generate capabilities from android apk
         @param apk_abs_path:  absolute android package path  
-        @param aapt_exe_4path: absoulte file path of `aapt.exe`, default is `aapt`  if ENV have been set         
+        @param aapt_exe_4path: absoulte file path of `aapt.exe`, default is `aapt`  if ENV have been set
+        @return: desired capabilities         
         '''
         capabilities = {}
         if not os.path.isfile(apk_abs_path):
@@ -51,9 +52,9 @@ class Android(object):
 
     @classmethod
     def get_devices(cls, adb_exe_full_path="adb"):
-        ''' get devices id form parsed command `adb devices`
-        @param adb_exe_full_path: full path of executable adb, default is adb if ENV have been set. 
-            
+        ''' parsed commands to get android devices infomation. 
+        @param adb_exe_full_path: full path of executable `adb.exe`, default is `adb` if ENV have been set.
+        @return: dict of devices infomation. formation is {device_id: device_info}
         '''
         devices = []
         # 读取设备 id
@@ -100,6 +101,7 @@ class Android(object):
     
     @classmethod
     def __command(cls, cmd, readlines = True):
+        ''' just execute the command '''        
         with os.popen(cmd) as f:
             if readlines:
                 result = f.readlines()

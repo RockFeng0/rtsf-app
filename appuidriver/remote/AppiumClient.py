@@ -17,68 +17,10 @@ v1.0    Original version to use
 UI and Web Http automation frame for python.
 
 '''
-import os,re
+
 from appium import webdriver
 from multiprocessing import Pool,freeze_support
-
-
-    
-def getAndroidDeviceDesiredInfo(apklocation=None, adb_exe_4path=None, aapt_exe_4path = None):
-    ''' Get the data of all connected android device info and apk's capabilities.
-        Before using the capability, 
-        the 'None' values of 'deviceName' and 'platformVersion' in capabilities should be replace with the value of 'deviceId' and 'android_version'.
-        Usage:
-            desired =  getAndroidDeviceDesiredInfo(r'D:\auto\python\app-autoApp\demoProject\apps\ApiDemos\ApiDemos-debug.apk')
-            devices = desired.get("devices")
-            cap = desired.get("capabilities")
-            cap["deviceName"],cap["platformVersion"] = devices[0]["id"],devices[0]["android_version"]
-            print cap
-        :param apklocation: if None, Return pad info
-        :param adb_exe_4path: if None, Path of OS Environment should be set for adb.exe
-        :param aapt_exe_4path: if None, Path of OS Environment should be set for aapt.exe         
-    '''
-    devices = {}
-    
-    adb_exe = "adb.exe"
-    if adb_exe_4path:
-        adb_exe = adb_exe_4path
-    
-    aapt_exe = "aapt.exe"
-    if aapt_exe_4path:
-        aapt_exe = aapt_exe_4path
-    
-    # 读取设备 id
-    os.popen(adb_exe +" start-server").close()
-    device_ids = os.popen(adb_exe + " devices").readlines()[1:-1]
-    if not device_ids:
-        print "No device is connected."
-        return devices
-    
-       
-    #### pad info
-    devices["devices"]=[]
-    for i in device_ids:
-        deviceId,deviceStatus = i.split()        
-        if deviceStatus != "device":
-            print "Waring: %s" %i
-            continue
-            
-        pad_ip = os.popen('%s -s %s shell getprop dhcp.wlan0.ipaddress' %(adb_exe, deviceId)).read().strip()
-        pad_type = os.popen('%s -s %s shell getprop ro.product.model' %(adb_exe, deviceId)).read().strip()
-        pad_version = os.popen('%s -s %s shell getprop ro.build.display.id' %(adb_exe, deviceId)).read().strip()
-        pad_cpu = os.popen('%s -s %s shell getprop ro.product.cpu.abi' %(adb_exe, deviceId)).read().strip()
-        android_version = os.popen('%s -s %s shell getprop ro.build.version.release' %(adb_exe, deviceId)).read().strip()
-        linux_version = os.popen('%s -s %s shell cat /proc/version' %(adb_exe, deviceId)).read().strip()
-        devices["devices"].append({
-            'id':deviceId,
-            'ip':pad_ip,
-            'model':pad_type,
-            'cpu':pad_cpu,
-            'pad_version':pad_version,            
-            'android_version':android_version,
-            'linux_version':linux_version,
-            })
-    return devices
+   
 
 class RunPool:
     @classmethod
