@@ -1,3 +1,5 @@
 eclipse.preferences.version=1
-encoding//appuidriver/remote/device_cap.py=utf-8
-encoding//tests/test_device_cap.py=utf-8
+encoding//appuidriver/remote/AppiumHatch.py=utf-8
+encoding//appuidriver/remote/AppiumJs.py=utf-8
+encoding//tests/test_AppiumHatch.py=utf-8
+encoding//tests/test_AppiumJs.py=utf-8

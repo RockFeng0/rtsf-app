@@ -1,27 +1,39 @@
 #! python3
 # -*- encoding: utf-8 -*-
 '''
-Current module: appuidriver.remote.device_cap
+Current module: appuidriver.remote.AppiumHatch
 
 Rough version history:
 v1.0    Original version to use
+V2.0    Change name from AppiumClient to AppiumHatch
 
 ********************************************************************
     @AUTHOR:  Administrator-Bruce Luo(罗科峰)
-    MAIL:     luokefeng@163.com
-    RCS:      appuidriver.remote.device_cap,  v1.0 2018年9月8日
-    FROM:   2018年9月8日
+    MAIL:    lkf20031988@163.com
+    RCS:      appuidriver.remote.AppiumHatch,v 1.0 2018年9月9日
+    FROM:   2017年2月3日
 ********************************************************************
+
 ======================================================================
 
-Provide a function for the automation test
+UI and Web Http automation frame for python.
 
 '''
 
+import os,re
+from appium import webdriver
 
-import os, re
+class IOS(object):
+    ''' @todo: Methods for ios system. '''   
+    pass
 
 class Android(object):
+    ''' Methods for adndroid system.
+        1. generate capabilities for android
+        2. get android devices
+        3. generate appium webdriver
+        ...
+    '''
     
     @classmethod
     def gen_capabilities(cls, apk_abs_path, aapt_exe_4path = "aapt"):
@@ -60,8 +72,8 @@ class Android(object):
         @param adb_exe_full_path: full path of executable `adb.exe`, default is `adb` if ENV have been set.
         @return: dict of devices infomation. formation is {device_id: device_info}
         '''
-         
-        cls.__command(adb_exe_full_path + " start-server")        
+        
+        os.popen(adb_exe_full_path + " start-server").close()
         device_ids = cls.__command(adb_exe_full_path + " devices")[1:-1]        
         if not device_ids:
             print("No device is connected.")
@@ -99,13 +111,30 @@ class Android(object):
                 }
         return devices_info
     
+    @staticmethod
+    def get_remote_executor(hub_ip, port = 4723):
+        ''' Get remote hosts from Selenium Grid Hub Console
+        @param hub_ip: hub ip of appium server ip
+        @param port: hub port of appium server port
+        '''
+        return "http://{}:{}/wd/hub".format(hub_ip, port)
+    
+    @staticmethod
+    def gen_remote_driver(executor, capabilities):
+        ''' Generate remote drivers with desired capabilities(self.__caps) and command_executor
+        @param executor: command executor for appium remote driver
+        @param capabilities: A dictionary of capabilities to request when starting the appium session.
+        @return: remote driver
+        '''         
+        firefox_profile = capabilities.pop("firefox_profile",None)
+        return webdriver.Remote(command_executor = executor, desired_capabilities=capabilities, browser_profile = firefox_profile)
+    
     @classmethod
     def __command(cls, cmd, readlines = True):
-        ''' just execute the command '''        
+        ''' just execute the command '''
         with os.popen(cmd) as f:
             if readlines:
                 result = f.readlines()
             else:
                 result = f.read()
         return result
-
