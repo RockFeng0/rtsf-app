@@ -1,0 +1,29 @@
+#! python3
+# -*- encoding: utf-8 -*-
+'''
+Current module: appuidriver.__about__
+
+Rough version history:
+v1.0    Original version to use
+
+********************************************************************
+    @AUTHOR:  Administrator-Bruce Luo(罗科峰)
+    MAIL:    lkf20031988@163.com
+    RCS:      appuidriver.__about__,v 1.0 2018年9月9日
+    FROM:   2018年9月9日
+********************************************************************
+
+======================================================================
+
+UI and Web Http automation frame for python.
+
+'''
+
+__title__           = "appuidriver"
+__short_desc__      = "only for android ui test, base on rtsf"
+__version__         = 1.0
+__autor__           = u"罗科峰"
+__author_email__    = "lkf20031988@163.com"
+__license__         = 'MIT'
+
+HOME_PAGE           = "https://github.com/RockFeng0/rtsf-app"
