@@ -1,0 +1,85 @@
+# yaml测试用例，模型示例:
+- project:
+    name: xxx系统
+    module: 登陆模块-功能测试
+    
+- case:
+    # id 必填
+    id: ATP-1
+    # desc 必填
+    desc: 测试用例-模板格式的设计-模板（全字段）
+    
+    # responsible 选填
+    responsible: rockfeng0
+    
+    # tester 选填
+    tester: rockfeng0
+    
+    # 定义正则表达式, 定义的字符串不会解析
+    glob_regx:
+        rex_title: '百度一下，你就知道'
+    
+    # 定义变量， 效果同 SetVar(name, value)
+    glob_var:
+        url1: https://www.baidu.com
+        url2: https://www.sina.com
+        
+    # pre_command 选填
+    pre_command:
+        - ${NavigateTo($url1)}
+        # - ${DyStrData("title", re.compile(rex_title))}
+        # - ${VerifyTitle($title)}
+        
+    # steps 必填
+    steps:        
+        # webdriver 测试web ui 时使用
+        
+        - webdriver:
+            action: ${NavigateTo($url2)}
+            
+        - webdriver:
+            action: ${ScrollTo(0, 1000)}
+        
+        - webdriver:
+            action: ${TimeSleep(1)}
+        
+        - webdriver:
+            action: ${Refresh()}
+        
+        - webdriver:
+            action: ${NewTab($url1)}
+                
+        # 在webdriver中，设置 SetControl参数，定位元素
+        - webdriver:
+            by: css selector
+            value: '#kw'
+            index: 0
+            timeout: 10
+            action: ${SendKeys(123)}
+        
+        - webdriver:
+            action: ${TimeSleep(1)}
+            
+        # 直接使用 SetControl关键字，定位元素
+        - webdriver:
+            action: ${SetControl(by=css selector, value=#kw)}
+        
+        - webdriver:
+            action: ${SendKeys(456)}
+        
+        - webdriver:
+            action: ${SetControl(by=id, value=su)}
+        
+        - webdriver:
+            action: ${DyAttrData(id_su_value, value)}
+            
+        - webdriver:
+            action: ${TimeSleep(1)}
+        
+        - webdriver:
+            action: ${WebClose()} 
+                   
+    # post_command 选填
+    post_command:
+        - ${WebQuit()}
+    

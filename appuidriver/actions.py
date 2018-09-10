@@ -18,9 +18,6 @@ UI and Web Http automation frame for python.
 
 '''
 
-
-
-from appium import webdriver
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
 
@@ -29,100 +26,102 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-import os,time,subprocess
-from rock4.common import p_env, p_common
+import os,time
 
-
-class MobileApp():
-    ''' Mobile App Test.(need appium API>=17)'''
+class App(object):
+    driver = None    
     
-    @classmethod
-    def Init(cls, executor, desired_capabilities=None,browser_profile=None, proxy=None, keep_alive=False, server_path=None, apk_path=None,):
-        '''
-        # Selendroid need parameters:
-            executor                = "selendorid"            
-            desired_capabilities    = {"aut":"com.tianwen.aischool:V006R001C01B10SP02B04"}
-            server_path             = r"D:\auto\python\app-autoApp\demoProject\tools\selendroid-standalone.jar"
-            apk_path                = r"D:\auto\python\app-autoApp\demoProject\resource\V006R001C01B10SP02B04.apk"
+    @staticmethod
+    def LaunchApp():
+        ''' use current session to launch and active the app'''        
+        App.driver.launch_app()
         
-        # Appium need parameters:
-            executor                = "appium"            
-            desired_capabilities    = {"platformName":"Android","platformVersion":'4.4.2',"deviceName":"device",
-                                        "app":r'D:\auto\python\app-autoApp\demoProject\apps\ApiDemos\ApiDemos-debug.apk'
-                                        }
-            server_path             = r'E:\android-sdk\Appium'
-            #### desired_capabilities中，选择定义[app 或者 appPackage + appActivity],app指定apk，如果已经安装app，可以使用后者定义
-            #desired_capabilities['appPackage'] = 'io.appium.android.apis'
-            #desired_capabilities['appActivity'] = '.ApiDemos'
+    @staticmethod
+    def StartActivity(app_package ,app_activity):
+        ''' Only support android.  start an activity and focus to it
+        @param app_package: app package name
+        @param app_activity: activity name you want to focus to        
+        '''
+        App.driver.start_activity(app_package,app_activity)
+    
+    @staticmethod
+    def PageSource():
+        ''' page source for this activity '''
+        return App.driver.page_source
+    
+    @staticmethod
+    def Forward():
+        App.driver.forward()
+       
+    @staticmethod
+    def Back():
+        App.driver.back()
+    
+    @staticmethod
+    def Shake():
+        ''' 模拟设备摇晃 '''
+        App.driver.shake()
             
+    
+    @staticmethod
+    def Lock(seconds):
+        App.driver.lock(seconds)
+    
+    @staticmethod
+    def BackgroundApp(seconds):
+        App.driver.background_app(seconds)
+    
+    @staticmethod
+    def OpenNotifications():
+        App.driver.open_notifications()        
             
-        '''
-        executors= {"selendroid":{
-                                  "executor":'http://localhost:4444/wd/hub',
-                                  "API_limited":False
-                                  },
-                    "appium":{
-                              "executor":'http://localhost:4723/wd/hub',
-                              "API_limited":True,
-                              "API_require":">= 17"
-                            }
-                    }
+    @staticmethod
+    def RemoveApp(app_package):
+        ''' 卸载app '''
+        App.driver.remove_app(app_package)
         
-        if not executor in executors:
-            raise Exception("Executor['%s'] was not supported.Select one for your executor in %s" %(executor,executors.keys()))
+    @staticmethod
+    def SwitchToDefaultContext():        
+        try:
+            App.driver.switch_to.context(None)
+        except:
+            return False
         
-        #### Start Server
-        with open("%s.log" %executor, 'w') as f:
-            if executor == "selendroid":    
-                # 设置2分钟命令超时，断开连接            
-                selendroid_cmd = [p_env.JAVA_EXE,"-jar",server_path,"-app",apk_path,"-sessionTimeout","120000"]
-                cls.__sub_process = subprocess.Popen(selendroid_cmd, stdout = f , stderr = f)
-                
-                p_common.wait_for_connection(port = 4444)
-                
-            if executor == "appium":
-                #设置2分钟命令超时，断开连接
-                node_path = os.path.join(server_path,"node.exe")
-                main_js_path = os.path.join(server_path,r"node_modules\appium\lib\server\main.js")
-                
-                appium_cmd = [node_path, main_js_path, "--command-timeout", "120000"]
-                cls.__sub_process = subprocess.Popen(appium_cmd, stdout = f, stderr = f)
-                
-                p_common.wait_for_connection(port=4723)
-            print cls.__sub_process.pid
-        server = executors.get(executor)
-        #### Connect Server
-        try:            
-            executor = server["executor"]
-            p_env.MOBILE = webdriver.Remote(executor, desired_capabilities, browser_profile, proxy, keep_alive)
-            p_env.BROWSER = p_env.MOBILE
-        except Exception,e:
-            raise Exception("%s\nNo connection has been created.Please check you server and device." %e)
+    @staticmethod
+    def SwitchToNewContext(context_name):
+        try:
+            WebDriverWait(App.driver, 10).until(lambda driver: getattr(driver,"switch_to.context")(context_name))          
+        except:            
+            print("Waring: Timeout at %d seconds.Context %s was not found." %context_name)
+            return False
         
-    @classmethod
-    def Lock(cls,seconds):
-        getattr(p_env.MOBILE,"lock")(seconds)
-        time.sleep(0.5)
+        
+        
+    @staticmethod
+    def Reset():
+        '''重置app, 即先closeApp然后在launchAPP '''
+        App.driver.reset()
+        
+    @staticmethod
+    def CloseApp():
+        ''' only close app . keep the session'''        
+        App.driver.close_app()
     
-    @classmethod
-    def BackgroundApp(cls,seconds):
-        getattr(p_env.MOBILE,"background_app")(seconds)
-        time.sleep(0.5)
+    @staticmethod
+    def QuitApp():
+        ''' will close the session '''
+        try:
+            App.driver.quit()            
+        except:
+            pass
+        finally:
+            App.driver = None  
+        
+          
+                
+        
+class MobileApp():    
     
-    @classmethod
-    def OpenNotifications(cls):
-        getattr(p_env.MOBILE,"open_notifications")()
-        time.sleep(0.5)
-    
-    @classmethod
-    def NavigateTo(cls,app_package ,app_activity):
-        ''' 
-        app_package = "io.appium.android.apis"
-        app_activity = ".view.DragAndDropDemo"
-        app_activity = ".ApiDemos"
-        '''
-        getattr(p_env.MOBILE,"start_activity")(app_package,app_activity)
-        time.sleep(0.5)
         
     @classmethod
     def IsAppInstalled(cls,app_package):
@@ -136,25 +135,6 @@ class MobileApp():
         # // todo
         return getattr(p_env.MOBILE,"is_app_installed")(app_abs_path)
         
-    
-    @classmethod
-    def Reset(cls):
-        '''相当于卸载、重装应用'''
-        getattr(p_env.MOBILE,"reset")()
-        
-    @classmethod
-    def RemoveApp(cls,app_package):
-        getattr(p_env.MOBILE,"remove_app")(app_package)
-    
-    @classmethod
-    def CloseApp(cls):
-        ''' only close app . keep the session'''
-        getattr(p_env.MOBILE,"close_app")()
-        
-    @classmethod
-    def LaunchApp(cls):
-        ''' use current session to launch and active the app'''
-        getattr(p_env.MOBILE,"launch_app")()
     
     @classmethod
     def GetCurrentContext(cls):        
@@ -172,36 +152,13 @@ class MobileApp():
     def GetAppString(cls):        
         return getattr(p_env.MOBILE,"app_strings")()
             
-    @classmethod
-    def SwitchToContext(cls,context_name):
-        try:
-            getattr(p_env.MOBILE,"switch_to.context")(context_name)
-        except:
-            pass
-        
-    @classmethod
-    def SwitchToDefaultContext(cls):        
-        try:
-            getattr(p_env.MOBILE,"switch_to.context")(None)
-        except:
-            pass
+    
     
     @classmethod
     def Keyevent(cls,key_code_name):
         getattr(p_env.MOBILE,"keyevent")(key_code_name)
         
-    @classmethod
-    def Forward(cls):
-        getattr(p_env.MOBILE,"forward")()
-       
-    @classmethod
-    def Back(cls):
-        getattr(p_env.MOBILE,"back")()
     
-    @classmethod
-    def Shake(cls):
-        ''' 模拟设备摇晃 '''
-        getattr(p_env.MOBILE,"shake")()
         
     @classmethod
     def Swipe(cls, startx, starty, endx, endy,duration=None):
@@ -249,18 +206,7 @@ class MobileApp():
         ''' 模拟用户点击 '''
         getattr(p_env.MOBILE,"tap'")(positions,duration)
          
-    @classmethod
-    def QuitApp(cls):
-        ''' will close the session '''
-        try:
-            getattr(p_env.MOBILE,"quit")()            
-        except:
-            pass
-        
-        try:
-            cls.__sub_process.kill()
-        except:
-            pass
+    
             
     
     
@@ -476,9 +422,7 @@ class MobileElement():
         cls.__clearup()
         return len(elements)
         
-    @classmethod
-    def GetPageXML(cls):
-        return getattr(p_env.MOBILE,"page_source")
+    
         
     @classmethod
     def GetAttribute(cls, attr):        
