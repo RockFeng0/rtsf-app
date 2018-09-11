@@ -18,6 +18,8 @@ UI and Web Http automation frame for python.
 
 '''
 
+import os,time,json,re
+
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
 
@@ -25,8 +27,6 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-
-import os,time
 
 class App(object):
     driver = None    
@@ -60,8 +60,7 @@ class App(object):
     @staticmethod
     def Shake():
         ''' 模拟设备摇晃 '''
-        App.driver.shake()
-            
+        App.driver.shake()            
     
     @staticmethod
     def Lock(seconds):
@@ -69,6 +68,7 @@ class App(object):
     
     @staticmethod
     def BackgroundApp(seconds):
+        '''应用会被放到后台特定时间,然后应用会重新回到前台 '''        
         App.driver.background_app(seconds)
     
     @staticmethod
@@ -90,12 +90,11 @@ class App(object):
     @staticmethod
     def SwitchToNewContext(context_name):
         try:
+            #App.driver.contexts
             WebDriverWait(App.driver, 10).until(lambda driver: getattr(driver,"switch_to.context")(context_name))          
         except:            
             print("Waring: Timeout at %d seconds.Context %s was not found." %context_name)
-            return False
-        
-        
+            return False        
         
     @staticmethod
     def Reset():
@@ -117,511 +116,372 @@ class App(object):
         finally:
             App.driver = None  
         
-          
+class AppElement(object):
+    
+    __control = {
+        "by":None,
+        "value":None, 
+        "index":0,
+        "timeout":10,
+        } 
                 
-        
-class MobileApp():    
+    @classmethod
+    def SetControl(cls,**kwargs):
+        cls.__control.update(kwargs)
     
+    @classmethod
+    def GetControl(cls):
+        return cls.__control
         
     @classmethod
-    def IsAppInstalled(cls,app_package):
-        return getattr(p_env.MOBILE,"is_app_installed")(app_package)
+    def _element(cls):
+        '''   find the element with controls '''
+        if not cls.__is_selector():
+            raise Exception("Invalid selector[%s]." %cls.__control["by"])
+        
+        driver = App.driver
+        try:            
+            elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
+        except:                        
+            raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
+        
+        if len(elements) < cls.__control["index"] + 1:                    
+            raise Exception("Element [%s]: Element Index Issue! There are [%s] Elements! Index=[%s]" % (cls.__name__, len(elements), cls.__control["index"]))
+        
+        if len(elements) > 1:              
+            print("Element [%s]: There are [%d] elements, choosed index=%d" %(cls.__name__,len(elements),cls.__control["index"]))
+        
+        elm = elements[cls.__control["index"]]
+        cls.__control["index"] = 0        
+        return elm
+    
+    @classmethod
+    def _elements(cls):
+        '''   find the elements with controls '''
+        if not cls.__is_selector():
+            raise Exception("Invalid selector[%s]." %cls.__control["by"])
+        
+        driver = App.driver
+        try:            
+            elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
+        except:            
+            raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
             
-    @classmethod
-    def InstallApp(cls,app_abs_path):
-        ''' install the app to mobile
-        app_abs_path=r"c:\test.apk"        
-        '''
-        # // todo
-        return getattr(p_env.MOBILE,"is_app_installed")(app_abs_path)
-        
+        return elements
+       
     
     @classmethod
-    def GetCurrentContext(cls):        
-        return getattr(p_env.MOBILE,"current_context")
-    
-    @classmethod
-    def GetCurrentContexts(cls):        
-        return getattr(p_env.MOBILE,"contexts")
-    
-    @classmethod
-    def GetCurrentActivity(cls):        
-        return getattr(p_env.MOBILE,"current_activity")
-    
-    @classmethod
-    def GetAppString(cls):        
-        return getattr(p_env.MOBILE,"app_strings")()
-            
-    
-    
-    @classmethod
-    def Keyevent(cls,key_code_name):
-        getattr(p_env.MOBILE,"keyevent")(key_code_name)
-        
-    
-        
-    @classmethod
-    def Swipe(cls, startx, starty, endx, endy,duration=None):
-        ''' 模拟用户滑动 '''
-        getattr(p_env.MOBILE,"swipe'")(startx,starty,endx,endy,duration)
-    
-    @classmethod
-    def SwipeLeft(cls,times):
-        driver = p_env.MOBILE        
-        width = driver.get_window_size()["width"]
-        height = driver.get_window_size()["height"]
-        for i in range(times):
-            driver.swipe(width/4*3, height / 2, width / 4 *1, height / 2, 500)
-            time.sleep(1)
-    
-    @classmethod
-    def SwipeRight(cls,times):
-        driver = p_env.MOBILE        
-        width = driver.get_window_size()["width"]
-        height = driver.get_window_size()["height"]
-        for i in range(times):
-            driver.swipe(width/4*1, height / 2, width / 4 *3, height / 2, 500)
-            time.sleep(1)
-    
-    @classmethod
-    def SwipeUp(cls,times):
-        driver = p_env.MOBILE        
-        width = driver.get_window_size()["width"]
-        height = driver.get_window_size()["height"]
-        for i in range(times):
-            driver.swipe(width/2, height/4*3, width /2, height/4*1, 500)
-            time.sleep(1)
-            
-    @classmethod
-    def SwipeDown(cls,times):
-        driver = p_env.MOBILE        
-        width = driver.get_window_size()["width"]
-        height = driver.get_window_size()["height"]
-        for i in range(times):
-            driver.swipe(width/2, height/4*1, width /2, height/4*3, 500)
-            time.sleep(1)
+    def __is_selector(cls):
+        all_selectors = (By.CLASS_NAME, By.CSS_SELECTOR, By.ID, By.LINK_TEXT, By.NAME, By.PARTIAL_LINK_TEXT, By.TAG_NAME, By.XPATH)
                         
-    @classmethod
-    def Tap(cls,positions,duration=None):
-        ''' 模拟用户点击 '''
-        getattr(p_env.MOBILE,"tap'")(positions,duration)
-         
+        if cls.__control["by"] in all_selectors:
+            return True
+        
+        print("Warning: selector[%s] should be in %s" %(cls.__control["by"],all_selectors))
+        return False
+               
+                
+class AppContext(AppElement):
     
+    glob = {}
             
-    
-    
-class MobileElement():
-    ''' Mobile App Element Test.(need appium API>=17)'''
-    (by, value) = (None, None)
-    (index,timeout) = (0,10)
-    __glob = {}
-    
     @classmethod
     def SetVar(cls, name, value):
         ''' set static value
         :param name: glob parameter name
         :param value: parameter value
         '''
-        cls.__glob.update({name:value})
+        cls.glob.update({name:value})
                 
     @classmethod
     def GetVar(cls, name):
-        return cls.__glob.get(name)
+        return cls.glob.get(name)     
     
     @classmethod
-    def TimeSleep(cls,seconds):
+    def DyStrData(cls, name, regx, index = 0):
+        ''' set dynamic value from the string data of response  
+        @param name: glob parameter name
+        @param regx: re._pattern_type
+            e.g.
+            DyStrData("a",re.compile('123'))
+        '''
+        text = App.PageSource()
+        if not text:
+            return
+        if not isinstance(regx, re._pattern_type):
+            raise Exception("DyStrData need the arg which have compiled the regular expression.")
+            
+        values = regx.findall(text)
+        result = ""
+        if len(values)>index:
+            result = values[index]        
+        cls.glob.update({name:result})
+                            
+    @classmethod
+    def DyXmlData(cls,name, sequence):
+        ''' to do '''
+        return
+        
+    @classmethod
+    def DyAttrData(cls,name, attr):
+        ''' node attribute '''
+        attr_value = cls._element().get_attribute(attr)
+        cls.glob.update({name:attr_value})
+                
+    @classmethod
+    def GetText(cls):
+        ''' node attribute: text '''
+        return cls._element().text
+    
+    @classmethod
+    def GetAttribute(cls, attr):
+        return cls._element().get_attribute(attr)
+         
+class AppWait(AppElement):    
+    
+    @classmethod
+    def TimeSleep(cls, seconds):
         time.sleep(seconds)
         
     @classmethod
-    def GetElement(cls):
-        element = None
+    def WaitForAppearing(cls):        
         try:
-            element = cls.__wait()
-        except Exception,e:
-            print e
-        finally:
-            return element
-    
-    @classmethod
-    def Set(cls, value):
-        if value == "":
-            return
-        
-        if value == "SET_EMPTY":
-            value = ""
-                
-        element = cls.__wait()
-        
-        if element.tag_name == "android.widget.ListView":
-            cls.Select(value)        
-        else:
-            element.clear()
-            action = ActionChains(p_env.MOBILE)
-            action.send_keys_to_element(element, value)            
-            action.perform()
-            
-            cls.__clearup()
-    
-    @classmethod
-    def Select(cls, value):
-        if value == "":
-            return
-                
-        element = cls.__wait()        
-        #### ListView ################
-        if element.tag_name == "android.widget.ListView":
-            elms = element.find_elements_by_name(value)            
-            if elms:
-                elms[0].click()
-                        
-        #### NOT Supported ################
-        else:
-            print "Element [%s]: Tag Name [%s] Not Support [Select]." % (cls.__name__, element.tag_name)
-        cls.__clearup()
-    
-    @classmethod
-    def TypeIn(cls, value):
-        '''
-        input value without clear existed values
-        '''
-        if value == "": return
-                
-        element = cls.__wait()        
-        action = ActionChains(p_env.MOBILE)
-        action.send_keys_to_element(element, value)
-        action.perform()
-        
-        cls.__clearup()
-        
-    @classmethod
-    def SelectByOrder(cls, order):
-        if order == "":
-            return
-        
-        order = int(order)
-        
-        element = cls.__wait()
-        
-        #### ListView ################
-        if element.tag_name == "android.widget.ListView":
-            elms = getattr(p_env.MOBILE,"find_elements")("xpath", "//android.widget.ListView[%s]/*" %(cls.index))
-            
-            if elms and order<len(elms):
-                elms[order].click()
-                        
-        #### NOT Supported ################
-        else:
-            print "Element [%s]: Tag Name [%s] Not Support [Select]." % (cls.__name__, element.tag_name)
-        cls.__clearup()
-  
-    @classmethod
-    def ScrollDown(cls):
-        ''' 
-        Sample usage:
-        (by,value)=(By.XPATH,"//android.widget.TextView")
-        ScrollDown()
-        '''
-        cls.__wait()
-        elements = getattr(p_env.MOBILE,"find_elements")(cls.by, cls.value)        
-        getattr(p_env.MOBILE,"scroll")(elements[len(elements)-1], elements[0])        
-        cls.__clearup()
-    
-    @classmethod
-    def ScrollUp(cls):
-        '''
-        Sample usage:
-        (by,value)=(By.XPATH,"//android.widget.TextView")
-        ScrollUp()
-        '''
-        cls.__wait()
-        elements = getattr(p_env.MOBILE,"find_elements")(cls.by, cls.value)        
-        getattr(p_env.MOBILE,"scroll")(elements[0],elements[len(elements)-1])        
-        cls.__clearup()
-    
-    @classmethod
-    def Click(cls):
-        element = cls.__wait()        
-        element.click()
-        cls.__clearup()
-   
-    @classmethod
-    def LongPress(cls):
-        element = cls.__wait()   
-        action = TouchAction(p_env.MOBILE)
-        action.long_press(element)
-        action.perform()        
-        cls.__clearup()
-    
-    @classmethod
-    def PressAndHold(cls):        
-        element = cls.__wait()
-        action = TouchAction(p_env.MOBILE)
-        action.press(element)
-        action.perform()        
-        cls.__clearup()    
-    @classmethod
-    def MoveTo(cls):
-        
-        element = cls.__wait()
-        action = TouchAction(p_env.MOBILE)
-        action.move_to(element)
-        action.perform()
-        cls.__clearup()    
-    
-    @classmethod        
-    def ReleasePress(cls):
-        action = TouchAction(p_env.MOBILE)
-        action.release()
-        action.perform()
-                
-    @classmethod
-    def MultiDraw(cls):
-        e1 = TouchAction()
-        e1.press(x=150, y=100).release()
-
-        e2 = TouchAction()
-        e2.press(x=250, y=100).release()
-
-        smile = TouchAction()
-        smile.press(x=110, y=200).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=2, y=1)
-#         smile.press(x=110, y=200).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=2, y=1).move_to(x=2, y=1).\
-#             move_to(x=2, y=1).move_to(x=2, y=1).move_to(x=2, y=1).move_to(x=3, y=1).move_to(x=3, y=1).move_to(x=3, y=1).move_to(x=3, y=1).move_to(x=3, y=1).move_to(x=4, y=1).\
-#             move_to(x=4, y=1).move_to(x=4, y=1).move_to(x=4, y=1).move_to(x=4, y=1).move_to(x=5, y=1).move_to(x=5, y=1).move_to(x=5, y=1).move_to(x=5, y=1).move_to(x=5, y=1).\
-#             move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=0).move_to(x=5, y=-1).\
-#             move_to(x=5, y=-1).move_to(x=5, y=-1).move_to(x=5, y=-1).move_to(x=5, y=-1).move_to(x=4, y=-1).move_to(x=4, y=-1).move_to(x=4, y=-1).move_to(x=4, y=-1).move_to(x=4, y=-1).\
-#             move_to(x=3, y=-1).move_to(x=3, y=-1).move_to(x=3, y=-1).move_to(x=3, y=-1).move_to(x=3, y=-1).move_to(x=2, y=-1).move_to(x=2, y=-1).move_to(x=2, y=-1).move_to(x=2, y=-1).\
-#             move_to(x=2, y=-1).move_to(x=1, y=-1).move_to(x=1, y=-1).move_to(x=1, y=-1).move_to(x=1, y=-1).move_to(x=1, y=-1)
-        smile.release()
-
-        ma = MultiAction(p_env.MOBILE)
-        ma.add(e1, e2, smile)
-        ma.perform()
-        
-    @classmethod
-    def SendEnter(cls):
-        element = cls.__wait()        
-        action = ActionChains(p_env.MOBILE)
-        action.send_keys_to_element(element, Keys.ENTER)
-        action.perform()        
-        cls.__clearup()
-    
-    @classmethod
-    def GetFocus(cls):
-        
-        element = cls.__wait()   
-        element.send_keys(Keys.NULL)        
-        action = ActionChains(p_env.MOBILE)
-        action.send_keys_to_element(element, Keys.NULL)
-        action.perform()        
-        cls.__clearup()    
-    
-    @classmethod
-    def GetObjectsCount(cls):        
-        cls.__wait_for_appearing()        
-        elements = getattr(p_env.MOBILE,"find_elements")(cls.by, cls.value)
-        cls.__clearup()
-        return len(elements)
-        
-    
-        
-    @classmethod
-    def GetAttribute(cls, attr):        
-        element = cls.__wait()        
-        attr_value = element.get_attribute(attr)        
-        cls.__clearup()
-        return attr_value
-                        
-    @classmethod
-    def WaitForAppearing(cls):
-        result = cls.__wait_for_appearing()
-        cls.__clearup()
+            result = True if cls._element() else False                            
+        except:
+            result = False
         return result
-           
+        
     @classmethod
-    def WaitForDisappearing(cls):
-        result = cls.__wait_for_disappearing()
-        cls.__clearup()
+    def WaitForDisappearing(cls):        
+        try:
+            result = False if cls._element() else True
+        except:
+            result = True
         return result
-    
+        
     @classmethod
     def WaitForVisible(cls):
-        element = cls.__wait()
-        result = element.is_displayed()
-        cls.__clearup()
+        try:
+            result = cls._element().is_displayed()
+        except:
+            result = False        
         return result
-        
+
+class AppVerify(AppElement):
+    
+    
     @classmethod
-    def IsEnabled(cls):
-        element = cls.__wait()        
-        if element.is_enabled():
-            cls.__clearup()
+    def VerifyAppInstalled(cls,app_package):
+        return App.driver.is_app_installed(app_package)            
+    
+    @classmethod
+    def VerifyCurrentActivity(cls, app_activity):        
+        if App.driver.current_activity == app_activity:
             return True
         else:
-            cls.__clearup()
             return False    
     
     @classmethod
-    def IsExist(cls): 
-        elements = getattr(p_env.MOBILE,"find_elements")(cls.by, cls.value)
-        cls.__clearup()        
-        if len(elements) > 0:
+    def VerifyText(cls, text):
+        # 当前页面的title
+        if cls._element().text == text:
             return True
         else:
             return False
-    
-    @classmethod
-    def IsVisible(cls):
-        element = cls.__wait()
-        if element.is_displayed():
-            cls.__clearup()
-            return True
-        else:
-            cls.__clearup()
-            return False
-          
-    @classmethod
-    def __wait(cls):
-        if not cls.__is_selector():
-            raise Exception("Invalid selector[%s]." %cls.by)
             
-        driver = p_env.MOBILE
-        try:            
-            elements = WebDriverWait(driver, cls.timeout).until(lambda driver: getattr(driver,"find_elements")(cls.by, cls.value))
-        except:            
-            raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.timeout,cls.value))
-        
-        if len(elements) < cls.index + 1:                    
-            raise Exception("Element [%s]: Element Index Issue! There are [%s] Elements! Index=[%s]" % (cls.__name__, len(elements), cls.index))
-        
-        if len(elements) > 1:              
-            print "Element [%s]: There are [%d] elements, choosed index=%d" %(cls.__name__,len(elements),cls.index)
-            
-        return elements[cls.index]
-                
     @classmethod
-    def __wait_for_disappearing(cls):
+    def VerifyElemEnabled(cls):
         try:
-            if cls.__wait():
-                return False
-            return True
+            result = cls._element().is_enabled()                          
         except:
-            return True
+            result = False
+        return result   
     
     @classmethod
-    def __wait_for_appearing(cls):
+    def VerifyElemNotEnabled(cls):
         try:
-            if cls.__wait():
-                return True
+            result = False if cls._element().is_enabled() else True                          
+        except:
+            result = True
+        return result   
+    
+    @classmethod
+    def VerifyElemVisible(cls):
+        ''' 仅限 Selenium，appium是否实现了类似功能不是太确定, 适用如，混合应用中，潜入了web的情况'''
+        try:
+            result = cls._element().is_displayed()
+        except:
+            result = False
+        return result
+    
+    @classmethod
+    def VerifyElemNotVisible(cls):
+        ''' 仅限 Selenium，appium是否实现了类似功能不是太确定, 适用如，混合应用中，潜入了web的情况'''
+        try:
+            result = False if cls._element().is_displayed() else True
+        except:
+            result = True
+        return result       
+        
+    @classmethod
+    def VerifyElemAttr(cls, attr_name, expect_value):
+        '''
+        @note:  verify content of attribute is expected content
+        @param attr_name: name of element attribute 
+        @param expet_value: expect attribute value
+        '''
+        if expect_value in cls._element().get_attribute(attr_name):
+            return True
+        else:
             return False
+    
+    @classmethod
+    def VerifyElemCounts(cls, num):        
+        if len(cls._elements()) == num:
+            return True
+        else:
+            return False
+        
+class AppTouchAction(AppElement):
+    
+    @classmethod
+    def Tap(cls):
+        element = cls._element()
+        try:
+            TouchAction(App.driver).tap(element).perform()
         except:
             return False
     
     @classmethod
-    def __is_selector(cls):
-        all_By_selectors = ['CLASS_NAME', 'CSS_SELECTOR', 'ID', 'LINK_TEXT', 'NAME', 'PARTIAL_LINK_TEXT', 'TAG_NAME', 'XPATH']
-        all_selectors = [By.CLASS_NAME, By.CSS_SELECTOR, By.ID, By.LINK_TEXT, By.NAME, By.PARTIAL_LINK_TEXT, By.TAG_NAME, By.XPATH]
-        
-        if cls.by in all_By_selectors:
-            cls.by = getattr(By, cls.by)
-            return True
-        
-        if cls.by in all_selectors:
-            return True
-        
-        print "Warning: selector[%s] should be in %s" %(cls.by,all_By_selectors)
-        return False
-        
-    @classmethod
-    def __clearup(cls):
-        if cls.index != 0:
+    def LongPress(cls):
+        element = cls._element()
+        try:
+            TouchAction(App.driver).long_press(element).perform()
+        except:
+            return False
             
-            print "Element [%s]: The Operation Element Index = [%s]." % (cls.__name__, cls.index)
-        
-        cls.index = 0
-    
-    ''' Useless Functions
     @classmethod
-    def VerifyExistence(cls, trueORfalse):        
-        if trueORfalse == True:
-            cls.__wait_for_appearing()
-        else:
-            cls.__wait_for_disappearing()
-        
-        
-        
-        cls.__clearup()
-        if len(elements) > 0:
-            if trueORfalse == True:
-                print "pass,Exists!"
-            else:
-                print "fail,Exists!"
-        else:
-            if trueORfalse == False:
-                print "pass,Not Exists!"
-            else:
-                print "fail,Not Exists!"
-    
-    
-    @classmethod
-    def VerifyEnabled(cls, trueOrfalse):
-        
-        
-        element = cls.__wait()
-        
-        
-        if element.is_enabled():
-            if trueOrfalse == True:
-                
-                print "Pass"
-            else:
-                
-                print "Fail"
-        else:
-            if trueOrfalse == True:
-                
-                print "Fail"
-            else:
-                
-                print "Pass"
-        
-        cls.__clearup()
-    
-  
-    @classmethod
-    def VerifyAttribute(cls, attr, contain_content):
-        if contain_content == "": return
-        
-        
-        
-        element = cls.__wait()
-        
-        attr_value = element.get_attribute(attr)
-        
-        if contain_content == attr_value:
+    def Press(cls):        
+        element = cls._element()
+        try:
+            TouchAction(App.driver).press(element).perform()
+        except:
+            return False   
             
-            print "Real attr_value=[%s]" % attr_value
-        else:
-            
-            "Real attr_value=[%s]" % attr_value
-        cls.__clearup()
+    @classmethod
+    def MoveTo(cls):
+        element = cls._element()
+        try:
+            TouchAction(App.driver).move_to(element).perform()
+        except:
+            return False
     
+    @classmethod        
+    def Release(cls):        
+        try:
+            TouchAction(App.driver).release().perform()
+        except:
+            return False   
+                
+    @classmethod
+    def Draw(cls):
+        ''' 模拟多个动作，这里，画了个笑脸   '''
+        try:
+            MultiAction(App.driver).add(TouchAction().press(x=150, y=100).release(),
+                                        TouchAction().press(x=250, y=100).release(),
+                                        TouchAction().press(x=110, y=200).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=2, y=1).release(),
+                ).perform()
+        except:
+            return False
     
     @classmethod
-    def VerifyAttributeContains(cls, attr, contain_content):
-        if contain_content == "": return
+    def Swipe(cls, direction):
+        ''' swipe screen
+        @param direction: up, down, left, right
+        '''
+        size = App.driver.get_window_size()
+        unit_width = size["width"] / 4
+        unit_height = size["height"] / 4
         
-        element = cls.__wait()
+        if direction.lower() == "left":
+            App.driver.swipe(unit_width *3, unit_height *2, unit_width *1, unit_height *2, 500)
         
-        attr_value = element.get_attribute(attr)
+        elif direction.lower() == "right":
+            App.driver.swipe(unit_width *1, unit_height *2, unit_width *3, unit_height *2, 500)
+        
+        elif direction.lower() == "up":
+            App.driver.swipe(unit_width *2, unit_height *3, unit_width *2, unit_height *1, 500)
+        
+        elif direction.lower() == "down":
+            App.driver.swipe(unit_width *2, unit_height *1, unit_width *2, unit_height *3, 500)
+            
+class AppActions(AppElement):
+    
+    @classmethod
+    def Pinch(cls):
+        try:
+            App.driver.pinch(cls._element())
+        except:
+            return False
+        
+    @classmethod
+    def Zoom(cls):
+        try:
+            App.driver.zoom(cls._element())
+        except:
+            return False
         
                 
-        if contain_content in attr_value:            
-            print "Real attr_value=[%s]" % attr_value
-        else:            
-            print "Real attr_value=[%s]" % attr_value
-        
-        cls.__clearup()
+class AppSelActions(AppElement):
+    ''' selenium methods in appium
+    @note: Waiting for improving
     '''
+            
+    @classmethod
+    def SendKeys(cls, value):
+        '''
+        @param value: 文本框，输入的文本
+        '''
+        if value == "":
+            return
+        
+        element = cls._element()
+        element.clear()        
+        action = ActionChains(App.driver)
+        action.send_keys_to_element(element, value)
+        action.perform()
+        
+    @classmethod
+    def Focus(cls):
+        """        在指定输入框发送 Null， 用于设置焦点
+        @note: key event ->  NULL
+        """
+        
+        element = cls._element()
+        #element.send_keys(Keys.NULL)        
+        action = ActionChains(App.driver)
+        action.send_keys_to_element(element, Keys.NULL)
+        action.perform()
+    
+    @classmethod
+    def Enter(cls):
+        '''     在指定输入框发送回回车键
+        @note: key event -> enter
+        '''
+        
+        element = cls._element()        
+        action = ActionChains(App.driver)
+        action.send_keys_to_element(element, Keys.ENTER)
+        action.perform()
+            
+        
+   
+        
+    
+        
+    
+                        
+        
 def usage_for_appium():
     #app_path = os.path.dirname(__file__)
     app_path = r'D:\auto\python\app-autoApp\demoProject\apps\ApiDemos'
