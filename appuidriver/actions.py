@@ -83,18 +83,20 @@ class App(object):
     @staticmethod
     def SwitchToDefaultContext():        
         try:
-            App.driver.switch_to.context(None)
+            App.driver.switch_to.context(App.driver.contexts[0])
         except:
             return False
         
     @staticmethod
-    def SwitchToNewContext(context_name):
+    def SwitchToNewContext():
         try:
-            #App.driver.contexts
-            WebDriverWait(App.driver, 10).until(lambda driver: getattr(driver,"switch_to.context")(context_name))          
-        except:            
-            print("Waring: Timeout at %d seconds.Context %s was not found." %context_name)
-            return False        
+            WebDriverWait(App.driver, 10).until(lambda driver: len(driver.contexts) >= 2)
+            new_context = App.driver.contexts[-1]
+            App.driver.switch_to.context(new_context)       
+        except Exception as e:
+            print("@@@!!!", e)            
+            print("Waring: Timeout at 10 seconds. New context Not Found.")
+            return False
         
     @staticmethod
     def Reset():

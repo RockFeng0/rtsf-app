@@ -29,7 +29,7 @@ class TestActions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         '''
-        @note:  adb version 1.0.32;  %ANDROID_HOME% = C:\d_disk\auto\buffer\test\tools\android\platform-tools
+        @note:  adb version 1.0.39;  %ANDROID_HOME% = C:\d_disk\auto\buffer\test\tools\android\platform-tools
         '''
         cls._adb_exe_path = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools\adb.exe'
         cls._aapt_exe_path = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools\aapt.exe'
@@ -68,6 +68,24 @@ class TestActions(unittest.TestCase):
         AppTouchAction.Swipe("up", times = 2)
         AppElement.SetControl(by = "-android uiautomator", value = 'text("Views")', index = 0, timeout = 10)
         AppTouchAction.Tap()
+        
+        AppTouchAction.Swipe("up", times = 10)
+        AppElement.SetControl(by = "-android uiautomator", value = 'text("WebView")', index = 0, timeout = 10)
+        AppTouchAction.Tap()
+        
+        # web-view
+        App.SwitchToNewContext()
+        self.assertEqual(App.driver.current_url, "data:text/html,<a href='x'>Hello World! - 1</a>")
+        
+        AppElement.SetControl(by = "css selector", value = "a")                
+        self.assertEqual(AppVerify.VerifyText('Hello World! - 1'), True)
+        
+        # native
+        App.SwitchToDefaultContext()
+        App.Back()
+        AppElement.SetControl(by = "-android uiautomator", value = 'text("WebView")', index = 0, timeout = 10)
+        self.assertEqual(AppVerify.VerifyText("WebView"), True)
+        
     
     
         
@@ -193,3 +211,6 @@ class TestActions(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    
+    
+    
