@@ -22,10 +22,10 @@ import os,time,json,re
 
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
+from appium.webdriver.common.mobileby import MobileBy
 
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 class App(object):
@@ -140,7 +140,8 @@ class AppElement(object):
             raise Exception("Invalid selector[%s]." %cls.__control["by"])
         
         driver = App.driver
-        try:            
+        try:
+            print("by: ", cls.__control["by"], "value: ",cls.__control["value"])            
             elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
         except:                        
             raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
@@ -172,7 +173,50 @@ class AppElement(object):
     
     @classmethod
     def __is_selector(cls):
-        all_selectors = (By.CLASS_NAME, By.CSS_SELECTOR, By.ID, By.LINK_TEXT, By.NAME, By.PARTIAL_LINK_TEXT, By.TAG_NAME, By.XPATH)
+        '''
+        @note: only web-view support:  MobileBy.CSS_SELECTOR, MobileBy.LINK_TEXT, MobileBy.NAME, MobileBy.PARTIAL_LINK_TEXT, MobileBy.TAG_NAME
+        @note:  MobileBy.ANDROID_UIAUTOMATOR  
+        
+        e。g.  driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')        
+UiSelector的基本方法
+        文本方面的方法：
+　　1.text(String text) 文本
+　　2.textContains(String text) 文本包含
+　　3.textMatches(String regex) 文本正则
+　　4.textStartsWith(String text) 文本开始字符 
+
+描述方面的方法：
+　　1.description(String desc) 描述
+　　2.descriptionContains(String desc) 描述包含
+　　3.descriptionMatches(String regex) 描述正则
+　　4.descriptionStartsWith(String desc) 描述开始字符
+ 
+类名方面的方法：
+　　1.childSelector(UiSelector selector) 子类
+　　2.className(String  className) 类名
+ 
+索性、实例方面的方法：
+　　1.index(int index) 编号
+　　2.instance(int instantce) 索引
+
+特有属性：
+　　1.checked(boolean val) 选择属性
+　　2.chickable(boolean val) 点击属性
+　　3.enabled(boolean val) enabled属性
+　　4.focusable(boolean val) 焦点属性
+　　5.longClickable(boolean val) 长按属性
+　　6.scrollable(boolean val) 滚动属性
+　　7.selected(boolean val) 选择属性
+
+包名方面的方法：
+　　1.packageName(String name) 包名
+　　2.packageNameMatches(String regex) 包名正则
+
+资源ID方面的方法：
+　　1.resourceId(String id) 资源ID
+　　2.resourceIdMatches(String regex) 资源ID正则
+        '''
+        all_selectors = (MobileBy.ANDROID_UIAUTOMATOR, MobileBy.CLASS_NAME, MobileBy.ID, MobileBy.XPATH, MobileBy.CSS_SELECTOR, MobileBy.LINK_TEXT, MobileBy.NAME, MobileBy.PARTIAL_LINK_TEXT, MobileBy.TAG_NAME)
                         
         if cls.__control["by"] in all_selectors:
             return True
@@ -395,7 +439,7 @@ class AppTouchAction(AppElement):
             return False
     
     @classmethod
-    def Swipe(cls, direction):
+    def Swipe(cls, direction, times = 1):
         ''' swipe screen
         @param direction: up, down, left, right
         '''
@@ -403,19 +447,23 @@ class AppTouchAction(AppElement):
         unit_width = size["width"] / 4
         unit_height = size["height"] / 4
         
-        if direction.lower() == "left":
-            App.driver.swipe(unit_width *3, unit_height *2, unit_width *1, unit_height *2, 500)
-        
-        elif direction.lower() == "right":
-            App.driver.swipe(unit_width *1, unit_height *2, unit_width *3, unit_height *2, 500)
-        
-        elif direction.lower() == "up":
-            App.driver.swipe(unit_width *2, unit_height *3, unit_width *2, unit_height *1, 500)
-        
-        elif direction.lower() == "down":
-            App.driver.swipe(unit_width *2, unit_height *1, unit_width *2, unit_height *3, 500)
+        for _ in range(int(times)):
+            if direction.lower() == "left":
+                App.driver.swipe(unit_width *3, unit_height *2, unit_width *1, unit_height *2, 500)
+            
+            elif direction.lower() == "right":
+                App.driver.swipe(unit_width *1, unit_height *2, unit_width *3, unit_height *2, 500)
+            
+            elif direction.lower() == "up":
+                App.driver.swipe(unit_width *2, unit_height *3, unit_width *2, unit_height *1, 500)
+            
+            elif direction.lower() == "down":
+                App.driver.swipe(unit_width *2, unit_height *1, unit_width *2, unit_height *3, 500)
             
 class AppActions(AppElement):
+    ''' selenium methods in appium
+    @note: Waiting for improving
+    '''
     
     @classmethod
     def Pinch(cls):
@@ -478,7 +526,7 @@ class AppSelActions(AppElement):
    
         
     
-        
+'''
     
                         
         
@@ -551,3 +599,4 @@ def usage_for_appium():
 if __name__ == "__main__":    
     usage_for_appium()
     
+'''

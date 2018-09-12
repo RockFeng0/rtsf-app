@@ -84,7 +84,7 @@ class AppiumJs:
             1. 下载安装node.js, 默认安装后，设置了环境变量
             2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
             3. 安装appium: cnpm install appium -g
-            4. 启动appium: appium.cmd --command-timeout 120000 -p 4723 -U device_id_1
+            4. 启动appium: appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
             5。 appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1            
         '''
         

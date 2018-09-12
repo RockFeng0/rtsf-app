@@ -28,7 +28,7 @@ class TestAndroid(unittest.TestCase):
     def setUp(self):
         self._adb_exe_path = r'D:\auto\buffer\test\test_rtsf_web\android\adb.exe'
         self._aapt_exe_path = r'D:\auto\buffer\test\test_rtsf_web\android\aapt.exe'
-        self._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\ApiDemos-debug.apk'        
+        self._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\ApiDemos-debug.apk'
         
     def test_gen_capabilities(self):
         desired_cap = Android.gen_capabilities(self._apk_abs_path, self._aapt_exe_path)
