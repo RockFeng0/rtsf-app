@@ -19,16 +19,17 @@ UI and Web Http automation frame for python.
 
 '''
 
-import unittest
+import unittest, os
 from appuidriver.remote.AppiumHatch import Android
 from appuidriver.remote.AppiumJs import AppiumJs
 
 class TestAndroid(unittest.TestCase):
     
     def setUp(self):
-        self._adb_exe_path = r'D:\auto\buffer\test\test_rtsf_web\android\adb.exe'
-        self._aapt_exe_path = r'D:\auto\buffer\test\test_rtsf_web\android\aapt.exe'
-        self._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\ApiDemos-debug.apk'
+        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
+        self._adb_exe_path = os.path.join(platform_tools, "adb.exe")
+        self._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
+        self._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
         
     def test_gen_capabilities(self):
         desired_cap = Android.gen_capabilities(self._apk_abs_path, self._aapt_exe_path)
@@ -47,7 +48,7 @@ class TestAndroid(unittest.TestCase):
     def test_get_devices(self):
         devices = Android.get_devices(self._adb_exe_path)
         #print("devices:",devices)
-        
+         
         if devices:
             device_id, properties = devices.popitem()
             self.assertIsNotNone(device_id)
@@ -55,21 +56,21 @@ class TestAndroid(unittest.TestCase):
                 self.assertIn(prop, properties)            
         else:
             self.assertIsInstance(devices, dict)
-            
+             
     def test_gen_remote_driver(self):
         server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:5555")        
         server.start_server()
-        
+         
         desired_cap = Android.gen_capabilities(self._apk_abs_path, self._aapt_exe_path)
         self.assertIsInstance(desired_cap, dict)
-        
+         
         devices = Android.get_devices(self._adb_exe_path)
         self.assertIsInstance(devices, dict)
-        
+         
         device_id, properties = devices.popitem()
         desired_cap["deviceName"] = device_id
         desired_cap["platformVersion"] = properties.get('android_version')
-        
+         
         driver = Android.gen_remote_driver(executor = Android.get_remote_executor("localhost", 4723), capabilities = desired_cap)
         driver.quit()        
         server.stop_server()

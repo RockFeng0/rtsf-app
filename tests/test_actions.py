@@ -18,7 +18,7 @@ Provide a function for the automation test
 
 '''
 
-import unittest
+import unittest, os
 
 from appuidriver.remote.AppiumJs import AppiumJs
 from appuidriver.remote.AppiumHatch import Android
@@ -29,13 +29,15 @@ class TestActions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         '''
-        @note:  adb version 1.0.39;  %ANDROID_HOME% = C:\d_disk\auto\buffer\test\tools\android\platform-tools
-        '''
-        cls._adb_exe_path = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools\adb.exe'
-        cls._aapt_exe_path = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools\aapt.exe'
-        cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
+        @note:  adb version 1.0.39;  %ANDROID_HOME% = D:\auto\buffer\test\test_rtsf_web\android
+        '''        
+        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
+        cls._adb_exe_path = os.path.join(platform_tools, "adb.exe")
+        cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
+        cls._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
         
-        cls.server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:6555")
+        
+        cls.server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:5555")
         cls.server.start_server()
         
         cls.executor = Android.get_remote_executor("localhost", 4723)        
@@ -47,7 +49,7 @@ class TestActions(unittest.TestCase):
         cls.desired_cap["platformVersion"] = properties.get('android_version')           
 #         desired_cap = {
 #             'platformName': 'Android',
-#             'deviceName': '127.0.0.1: 6555',
+#             'deviceName': '127.0.0.1:6555',
 #             'platformVersion': '4.4.4',
 #             'app': 'C: \\d_disk\\auto\\buffer\\test\\tools\\android\\ApiDemos-debug.apk',
 #             'appPackage': 'io.appium.android.apis',
