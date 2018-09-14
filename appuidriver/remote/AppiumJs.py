@@ -27,14 +27,14 @@ from rtsf.p_exception import NotFoundError
 
 class AppiumJs:
     
-    def __init__(self, port = 4725, timeout = 120000, loglevel = "info:info"):  
+    def __init__(self, port = 4725, loglevel = "info:info"):  
         '''                
         @param port:  appium server监听的端口, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
         @param loglevel: appium的日志级别    
         '''
         self.__port = port
         self.__parse_npm_command()     
-        self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--command-timeout", str(timeout), "--log-level", loglevel]
+        self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
     
     def bind_device(self, device_id):
         ''' appium server bind to a device id, whether the device is connected or not

@@ -18,7 +18,7 @@ UI and Web Http automation frame for python.
 
 '''
 
-import os,time,json,re
+import time,re
 
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
@@ -204,7 +204,7 @@ UiSelector的基本方法
 
 特有属性：
 　　1.checked(boolean val) 选择属性
-　　2.chickable(boolean val) 点击属性
+　　2.clickable(boolean val) 点击属性
 　　3.enabled(boolean val) enabled属性
 　　4.focusable(boolean val) 焦点属性
 　　5.longClickable(boolean val) 长按属性
@@ -271,17 +271,17 @@ class AppContext(AppElement):
         if len(values)>index:
             result = values[index]        
         cls.glob.update({name:result})
-                            
-    @classmethod
-    def DyXmlData(cls,name, sequence):
-        ''' to do '''
-        return
         
     @classmethod
     def DyAttrData(cls,name, attr):
         ''' node attribute '''
         attr_value = cls._element().get_attribute(attr)
         cls.glob.update({name:attr_value})
+    
+    @classmethod
+    def DyXmlData(cls,name, sequence):
+        ''' to do '''
+        return
                 
     @classmethod
     def GetText(cls):
