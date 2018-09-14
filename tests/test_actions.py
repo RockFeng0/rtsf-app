@@ -31,13 +31,13 @@ class TestActions(unittest.TestCase):
         '''
         @note:  adb version 1.0.39;  %ANDROID_HOME% = D:\auto\buffer\test\test_rtsf_web\android
         '''        
-        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
+        platform_tools = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools'
         cls._adb_exe_path = os.path.join(platform_tools, "adb.exe")
         cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
-        cls._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
+        cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
         
         
-        cls.server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:5555")
+        cls.server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:6555")
         cls.server.start_server()
         
         cls.executor = Android.get_remote_executor("localhost", 4723)        
@@ -65,7 +65,7 @@ class TestActions(unittest.TestCase):
         App.QuitApp()
         self.server.stop_server()
         
-    def test_pp(self):        
+    def test_App(self):        
         App.driver = Android.gen_remote_driver(executor = self.executor, capabilities = self.desired_cap)
         AppTouchAction.Swipe("up", times = 2)
         AppElement.SetControl(by = "-android uiautomator", value = 'text("Views")', index = 0, timeout = 10)
@@ -85,8 +85,25 @@ class TestActions(unittest.TestCase):
         # native
         App.SwitchToDefaultContext()
         App.Back()
+        
         AppElement.SetControl(by = "-android uiautomator", value = 'text("WebView")', index = 0, timeout = 10)
         self.assertEqual(AppVerify.VerifyText("WebView"), True)
+        AppTouchAction.Tap()
+                        
+        AppContext.DyPackageData("pkg")
+        self.assertEqual(AppContext.GetVar('pkg'),'io.appium.android.apis')
+        
+        AppContext.DyActivityData("web_view_active")
+        self.assertEqual(AppContext.GetVar('web_view_active'),'.view.WebView1')
+        App.CloseApp()
+        
+        App.StartActivity(AppContext.GetVar('pkg'), '.view.Buttons1')
+        self.assertEqual(AppVerify.VerifyCurrentActivity('.view.Buttons1'), True)
+        
+        App.StartActivity(AppContext.GetVar('pkg'), AppContext.GetVar('web_view_active'))
+        self.assertEqual(AppVerify.VerifyCurrentActivity('.view.WebView1'), True)
+        
+        
         
     
     

@@ -37,12 +37,13 @@ class App(object):
         App.driver.launch_app()
         
     @staticmethod
-    def StartActivity(app_package ,app_activity):
+    def StartActivity(app_package ,app_activity, timeout=10):
         ''' Only support android.  start an activity and focus to it
         @param app_package: app package name
         @param app_activity: activity name you want to focus to        
         '''
         App.driver.start_activity(app_package,app_activity)
+        return App.driver.wait_activity(app_activity,timeout)
     
     @staticmethod
     def PageSource():
@@ -244,6 +245,14 @@ class AppContext(AppElement):
         return cls.glob.get(name)     
     
     @classmethod
+    def DyActivityData(cls,name):
+        cls.glob.update({name:App.driver.current_activity})
+    
+    @classmethod
+    def DyPackageData(cls,name):
+        cls.glob.update({name:App.driver.current_package})
+    
+    @classmethod
     def DyStrData(cls, name, regx, index = 0):
         ''' set dynamic value from the string data of response  
         @param name: glob parameter name
@@ -279,9 +288,6 @@ class AppContext(AppElement):
         ''' node attribute: text '''
         return cls._element().text
     
-    @classmethod
-    def GetAttribute(cls, attr):
-        return cls._element().get_attribute(attr)
          
 class AppWait(AppElement):    
     
