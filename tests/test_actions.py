@@ -22,7 +22,7 @@ import unittest, os, re
 
 from appuidriver.remote.AppiumJs import AppiumJs
 from appuidriver.remote.AppiumHatch import Android
-from appuidriver.actions import AppWait,AppElement,AppContext,AppVerify,App,AppActions,AppTouchAction,AppSelActions
+from appuidriver.actions import AppWait,AppElement,AppContext,AppVerify,App,AppActions,AppTouchAction
 
 class TestActions(unittest.TestCase):
     
@@ -36,7 +36,7 @@ class TestActions(unittest.TestCase):
         cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
         cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
                 
-        cls.server = AppiumJs(port = 4723, timeout = 120000).bind_device(device_id = "127.0.0.1:6555")
+        cls.server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:6555")
         cls.server.start_server()
         
         devices = Android.get_devices(cls._adb_exe_path)
@@ -105,10 +105,60 @@ class TestActions(unittest.TestCase):
         AppElement.SetControl(by = '-android uiautomator', value = 'text("Animation")')
         self.assertTrue(AppWait.WaitForAppearing())
         self.assertTrue(AppWait.WaitForVisible())
+        App.CloseApp()
         
     def test_AppVerify(self):
-        pass
+        app_package = 'io.appium.android.apis'
+        app_activity = '.animation.BouncingBalls'
         
+        App.StartActivity(app_package, app_activity)
+        self.assertTrue(AppVerify.VerifyAppInstalled(app_package))
+        self.assertTrue(AppVerify.VerifyCurrentActivity(app_activity))
+        
+        AppElement.SetControl(by = '-android uiautomator', value = 'text("Animation/Bouncing Balls")')
+        self.assertTrue(AppVerify.VerifyElemEnabled())
+        self.assertTrue(AppVerify.VerifyElemVisible())
+        self.assertTrue(AppVerify.VerifyElemAttr('text', 'Animation/Bouncing Balls'))
+        self.assertTrue(AppVerify.VerifyElemAttr('clickable', 'false'))
+        self.assertTrue(AppVerify.VerifyText("Animation/Bouncing Balls"))
+        
+        AppElement.SetControl(by = 'id', value = 'io.appium.android.apis:id/container')
+        AppTouchAction.Draw()
+        App.CloseApp()
+        
+    def test_AppTouchAction(self):
+        App.StartActivity('io.appium.android.apis','.view.Controls1')
+        
+        AppElement.SetControl(by = 'id', value = 'io.appium.android.apis:id/edit')
+        AppActions.SendKeys(u'你好    appium')
+        
+        AppElement.SetControl(by = '-android uiautomator', value = 'text("Checkbox 1")')
+        AppTouchAction.Tap()
+        AppVerify.VerifyElemAttr('checkable', "true")
+        AppVerify.VerifyElemAttr('checked', "true")        
+        AppTouchAction.Tap()
+        AppVerify.VerifyElemAttr('checked', "false")
+        
+        AppTouchAction.Swipe("up", times = 1)        
+        AppElement.SetControl(by = 'id', value = 'android:id/text1')
+        AppTouchAction.Tap()        
+        AppElement.SetControl(by = '-android uiautomator', value = 'text("Earth")')
+        AppTouchAction.Tap()
+        
+        App.Back()
+        
+        App.StartActivity('io.appium.android.apis','.graphics.TouchPaint')
+        AppTouchAction.Draw()
+        
+        App.StartActivity('io.appium.android.apis','.view.DragAndDropDemo')
+        AppElement.SetControl(by = 'id', value = 'io.appium.android.apis:id/drag_dot_1')
+        AppTouchAction.LongPress()
+        
+        AppElement.SetControl(by = 'id', value = 'io.appium.android.apis:id/drag_dot_2')
+        AppTouchAction.MoveTo()
+        AppTouchAction.Release()        
+        
+        App.CloseApp()
                 
     def test_App(self):
         App.StartActivity('io.appium.android.apis','.ApiDemos')
@@ -152,6 +202,10 @@ class TestActions(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+#     suite = unittest.TestSuite()
+#     suite.addTest(TestActions("test_AppTouchAction"))
+#     runner = unittest.TextTestRunner(verbosity=2)
+#     runner.run(suite)
     
     
     

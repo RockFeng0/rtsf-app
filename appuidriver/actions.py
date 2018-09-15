@@ -26,7 +26,6 @@ from appium.webdriver.common.mobileby import MobileBy
 
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
 
 class App(object):
     driver = None    
@@ -277,12 +276,7 @@ class AppContext(AppElement):
         ''' node attribute '''
         attr_value = cls._element().get_attribute(attr)
         cls.glob.update({name:attr_value})
-    
-    @classmethod
-    def DyXmlData(cls,name, sequence):
-        ''' to do '''
-        return
-                
+                    
     @classmethod
     def GetText(cls):
         ''' node attribute: text '''
@@ -439,10 +433,12 @@ class AppTouchAction(AppElement):
     def Draw(cls):
         ''' 模拟多个动作，这里，画了个笑脸   '''
         try:
-            MultiAction(App.driver).add(TouchAction().press(x=150, y=100).release(),
-                                        TouchAction().press(x=250, y=100).release(),
-                                        TouchAction().press(x=110, y=200).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=1, y=1).move_to(x=2, y=1).release(),
-                ).perform()
+            action1 = TouchAction(App.driver).press(x=150, y=275).release()
+            action2 = TouchAction(App.driver).press(x=550, y=275).release()            
+            action3 = TouchAction(App.driver).press(x=150, y=475).move_to(x=250, y=500).move_to(x=350, y=525).move_to(x=450, y=500).move_to(x=550, y=475).release()
+            m_action = MultiAction(App.driver)
+            m_action.add(action1, action2, action3)
+            m_action.perform()
         except:
             return False
     
@@ -486,13 +482,8 @@ class AppActions(AppElement):
             App.driver.zoom(cls._element())
         except:
             return False
-        
-                
-class AppSelActions(AppElement):
-    ''' selenium methods in appium
-    @note: Waiting for improving
-    '''
-            
+    
+    ####  inherit selenium's methods
     @classmethod
     def SendKeys(cls, value):
         '''
@@ -500,111 +491,11 @@ class AppSelActions(AppElement):
         '''
         if value == "":
             return
+        try:
+            element = cls._element()
+            element.clear()        
+            element.send_keys(value)
+        except:
+            return False
         
-        element = cls._element()
-        element.clear()        
-        action = ActionChains(App.driver)
-        action.send_keys_to_element(element, value)
-        action.perform()
         
-    @classmethod
-    def Focus(cls):
-        """        在指定输入框发送 Null， 用于设置焦点
-        @note: key event ->  NULL
-        """
-        
-        element = cls._element()
-        #element.send_keys(Keys.NULL)        
-        action = ActionChains(App.driver)
-        action.send_keys_to_element(element, Keys.NULL)
-        action.perform()
-    
-    @classmethod
-    def Enter(cls):
-        '''     在指定输入框发送回回车键
-        @note: key event -> enter
-        '''
-        
-        element = cls._element()        
-        action = ActionChains(App.driver)
-        action.send_keys_to_element(element, Keys.ENTER)
-        action.perform()
-            
-        
-   
-        
-    
-'''
-    
-                        
-        
-def usage_for_appium():
-    #app_path = os.path.dirname(__file__)
-    app_path = r'D:\auto\python\app-autoApp\demoProject\apps\ApiDemos'
-    PATH = lambda p: os.path.abspath(
-        os.path.join(app_path, p)
-    )
-    
-    desired_capabilities = {}
-    desired_capabilities['platformName'] = 'Android'
-    desired_capabilities['platformVersion'] = '4.4.2'
-    desired_capabilities['deviceName'] = 'device'
-    desired_capabilities['app'] = PATH("ApiDemos-debug.apk")
-    #desired_capabilities['appPackage'] = 'io.appium.android.apis'
-    #desired_capabilities['appActivity'] = '.ApiDemos'
-            
-    
-    try:
-        # Initial connection
-        MobileApp.Init("appium", desired_capabilities, server_path = r'E:\android-sdk\Appium')
-        
-        #  Start activity
-        MobileApp.NavigateTo("io.appium.android.apis", ".view.DragAndDropDemo")    
-        
-        #
-        (MobileElement.by,MobileElement.value) = ("ID","io.appium.android.apis:id/drag_dot_3")
-        MobileElement.PressAndHold()
-        (MobileElement.by,MobileElement.value) = ("ID","io.appium.android.apis:id/drag_dot_2")
-        MobileElement.MoveTo()
-        time.sleep(2)
-        MobileElement.ReleasePress()
-        
-        MobileApp.NavigateTo("io.appium.android.apis", ".ApiDemos")
-        (MobileElement.by,MobileElement.value) = ("ID","android:id/text1")
-        MobileElement.ScrollDown()
-        
-        (MobileElement.by,MobileElement.value) = ("NAME","Views")
-        MobileElement.Click()
-        
-        (MobileElement.by,MobileElement.value) = ("NAME","Controls")
-        MobileElement.Click()
-        
-        (MobileElement.by,MobileElement.value) = ("ID","android:id/list")
-        MobileElement.Select("1. Light Theme")
-        MobileApp.Back()    
-        MobileElement.Set("1. Light Theme")
-        print MobileApp.GetCurrentActivity();# 打印   u'.view.Controls1'
-        
-        (MobileElement.by,MobileElement.value) = ("ID","io.appium.android.apis:id/edit")
-        MobileElement.TypeIn("Hello Android.")
-        MobileElement.Set("Hello World!")
-        
-        print MobileElement.GetPageXML().encode("utf-8")
-        print "edit is exist: ",MobileElement.IsExist()
-        print "edit is visible: ",MobileElement.IsVisible()
-        print "edit is enabled: ",MobileElement.IsEnabled()
-        
-        # 画个 笑脸
-        MobileApp.NavigateTo("io.appium.android.apis", ".graphics.TouchPaint");# apidemos->Graphics->Touch Paint
-        print MobileApp.GetCurrentActivity();# 打印   u'.graphics.TouchPaint'
-        MobileElement.MultiDraw()
-    except Exception,e:
-        print "======================================end"
-        print e
-    finally:
-        MobileApp.QuitApp()
-        
-if __name__ == "__main__":    
-    usage_for_appium()
-    
-'''
