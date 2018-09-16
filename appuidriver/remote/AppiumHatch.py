@@ -36,37 +36,49 @@ class Android(object):
     '''
     
     @classmethod
-    def gen_capabilities(cls, apk_abs_path, aapt_exe_4path = "aapt"):
+    def gen_capabilities(cls, apk_abs_path = None, app_package=None, app_activity=None, aapt_exe_4path = "aapt"):
         ''' generate capabilities from android apk
+        @note: app_package and app_activity are optional to start an activity if apk_abs_path is not None
+        @note: app_package and app_activity are required to start an activity if apk_abs_path is None        
+         
         @param apk_abs_path:  absolute android package path  
+        @param app_package: app package name
+        @param app_activity: app activity name
         @param aapt_exe_4path: absoulte file path of `aapt.exe`, default is `aapt`  if ENV have been set
         @return: desired capabilities         
         '''
-        capabilities = {}
-        if not os.path.isfile(apk_abs_path):
-            return capabilities
-        
-        regx_pkg_info = re.compile('([\w]*)=\'([\w\.]*)\'')
-        pkg_info_lines = list(cls.__command(r'%s dump badging %s' %(aapt_exe_4path, apk_abs_path)))
-        
-        # e.g. {'package': {'versionCode': '', 'name': 'io.appium.android.apis', 'versionName': ''}}
-        apk_package = {"package":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "package:" in line}        
-                
-        # e.g. {'launchable': {'label': '', 'name': 'io.appium.android.apis.ApiDemos', 'icon': ''}}
-        apk_launchable = {"launchable":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "launchable-activity:" in line}
-                    
         capabilities = {
             'platformName': 'Android',
             'deviceName': None,
             'platformVersion': None,
-            'app': apk_abs_path,
-            'appPackage': apk_package["package"]["name"],
-            'appWaitPackage': apk_package["package"]["name"],
-            'appActivity': apk_launchable["launchable"]["name"],
+            'app': None,
+            'appPackage': None,
+            'appWaitPackage': None,
+            'appActivity': None,
             'unicodeKeyboard' : True , #如果Unicodekeyboard为true，那么在开始运行脚本的时候，会帮你安装appium自带的输入法，这个输入法是没有UI的
             'resetKeyboard' : True, # 只有当你的用例是正常执行完毕，没被外界打断的情况下，而且resetkeyboard也为true的情况下，appium会帮你复原输入法
             'newCommandTimeout': 120000, # appium命令 --command-timeout 无效，使用cap中的 newCommandTimeout替代,单位 秒
         }
+        
+        if apk_abs_path != None and os.path.isfile(apk_abs_path):
+            regx_pkg_info = re.compile('([\w]*)=\'([\w\.]*)\'')
+            pkg_info_lines = list(cls.__command(r'%s dump badging %s' %(aapt_exe_4path, apk_abs_path)))
+            
+            # e.g. {'package': {'versionCode': '', 'name': 'io.appium.android.apis', 'versionName': ''}}
+            apk_package = {"package":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "package:" in line}        
+                    
+            # e.g. {'launchable': {'label': '', 'name': 'io.appium.android.apis.ApiDemos', 'icon': ''}}
+            apk_launchable = {"launchable":dict(regx_pkg_info.findall(line)) for line in pkg_info_lines if "launchable-activity:" in line}
+            
+            capabilities["app"] = apk_abs_path
+            capabilities["appPackage"] = apk_package["package"]["name"] if app_package is None else app_package
+            capabilities["appWaitPackage"] = apk_package["package"]["name"] if app_package is None else app_package
+            capabilities["appActivity"] = apk_launchable["launchable"]["name"] if app_activity is None else app_activity
+        else:
+            capabilities["appPackage"] = app_package
+            capabilities["appWaitPackage"] = app_package
+            capabilities["appActivity"] = app_activity            
+            
         return capabilities
 
     @classmethod

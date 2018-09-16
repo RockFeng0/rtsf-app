@@ -24,7 +24,6 @@ from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
 from appium.webdriver.common.mobileby import MobileBy
 
-from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 
 class App(object):
@@ -73,6 +72,7 @@ class App(object):
     
     @staticmethod
     def OpenNotifications():
+        ''' 打开通知栏 '''
         App.driver.open_notifications()        
             
     @staticmethod
@@ -81,7 +81,8 @@ class App(object):
         App.driver.remove_app(app_package)
         
     @staticmethod
-    def SwitchToDefaultContext():        
+    def SwitchToDefaultContext():
+        ''' 切换到默认上下文 '''
         try:
             App.driver.switch_to.context(App.driver.contexts[0])
         except:
@@ -89,6 +90,7 @@ class App(object):
         
     @staticmethod
     def SwitchToNewContext():
+        ''' 切换到新的上下文 '''
         try:
             WebDriverWait(App.driver, 10).until(lambda driver: len(driver.contexts) >= 2)
             new_context = App.driver.contexts[-1]
@@ -330,10 +332,11 @@ class AppVerify(AppElement):
     @classmethod
     def VerifyText(cls, text):
         # 当前页面的title
-        if cls._element().text == text:
-            return True
-        else:
-            return False
+        try:
+            result = cls._element().text == text
+        except:
+            result = False
+        return result
             
     @classmethod
     def VerifyElemEnabled(cls):
@@ -376,10 +379,11 @@ class AppVerify(AppElement):
         @param attr_name: name of element attribute 
         @param expet_value: expect attribute value
         '''
-        if expect_value in cls._element().get_attribute(attr_name):
-            return True
-        else:
-            return False
+        try:
+            result = expect_value in cls._element().get_attribute(attr_name)
+        except:
+            result = False
+        return result
     
     @classmethod
     def VerifyElemCounts(cls, num):        
@@ -392,33 +396,29 @@ class AppTouchAction(AppElement):
     
     @classmethod
     def Tap(cls):
-        element = cls._element()
         try:
-            TouchAction(App.driver).tap(element).perform()
+            TouchAction(App.driver).tap(cls._element()).perform()
         except:
             return False
     
     @classmethod
     def LongPress(cls):
-        element = cls._element()
         try:
-            TouchAction(App.driver).long_press(element).perform()
+            TouchAction(App.driver).long_press(cls._element()).perform()
         except:
             return False
             
     @classmethod
-    def Press(cls):        
-        element = cls._element()
+    def Press(cls):
         try:
-            TouchAction(App.driver).press(element).perform()
+            TouchAction(App.driver).press(cls._element()).perform()
         except:
             return False   
             
     @classmethod
     def MoveTo(cls):
-        element = cls._element()
         try:
-            TouchAction(App.driver).move_to(element).perform()
+            TouchAction(App.driver).move_to(cls._element()).perform()
         except:
             return False
     
@@ -495,6 +495,14 @@ class AppActions(AppElement):
             element = cls._element()
             element.clear()        
             element.send_keys(value)
+        except:
+            return False
+    
+    @classmethod
+    def Click(cls):
+        ''' 左键 点击 1次   '''
+        try:
+            cls._element().click()
         except:
             return False
         

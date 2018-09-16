@@ -23,37 +23,38 @@ import re
 from rtsf.p_executer import Runner
 from rtsf.p_common import CommonUtils,ModuleUtils,FileSystemUtils
 from rtsf.p_exception import FunctionNotFound,VariableNotFound
-from webuidriver.remote.SeleniumHatch import SeleniumHatch
-
+from appuidriver.remote.AppiumHatch import Android
         
 class _Driver(Runner):     
-    def __init__(self, is_local_driver):
+    def __init__(self):
         super(_Driver,self).__init__()
-        self._local_driver = is_local_driver
+        self._local_driver = False
     
     def run_test(self, testcase_dict, driver_map):
         fn, fn_driver = driver_map        
         parser = self.parser        
         tracer = self.tracers[fn]
         
-        _Actions = ModuleUtils.get_imported_module("webuidriver.actions")
-        _Actions.Web.driver = fn_driver
-        
+        _Actions = ModuleUtils.get_imported_module("appuidriver.actions")
+        _Actions.App.driver = fn_driver
+                            
         functions = {}
-        web_functions = ModuleUtils.get_callable_class_method_names(_Actions.Web)
-        web_element_functions = ModuleUtils.get_callable_class_method_names(_Actions.WebElement)
-        web_context_functions = ModuleUtils.get_callable_class_method_names(_Actions.WebContext)
-        web_wait_functions = ModuleUtils.get_callable_class_method_names(_Actions.WebWait)
-        web_verify_functions = ModuleUtils.get_callable_class_method_names(_Actions.WebVerify)
-        web_actions_functions = ModuleUtils.get_callable_class_method_names(_Actions.WebActions)
-        functions.update(web_functions)
-        functions.update(web_element_functions)
-        functions.update(web_context_functions)
-        functions.update(web_wait_functions)
-        functions.update(web_verify_functions)
-        functions.update(web_actions_functions)   
+        app_functions = ModuleUtils.get_callable_class_method_names(_Actions.App)
+        app_element_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppElement)
+        app_context_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppContext)
+        app_wait_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppWait)
+        app_verify_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppVerify)
+        app_touch_action_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppTouchAction)
+        app_actions_functions = ModuleUtils.get_callable_class_method_names(_Actions.AppActions)
+        functions.update(app_functions)
+        functions.update(app_element_functions)
+        functions.update(app_context_functions)
+        functions.update(app_wait_functions)
+        functions.update(app_verify_functions)
+        functions.update(app_touch_action_functions)
+        functions.update(app_actions_functions)
         parser.bind_functions(functions)
-        parser.update_binded_variables(_Actions.WebContext.glob)        
+        parser.update_binded_variables(_Actions.AppContext.glob)        
          
         case_name = testcase_dict["name"]
         
@@ -65,12 +66,12 @@ class _Driver(Runner):
             tracer.normal("**** bind glob variables")                
             glob_vars = parser.eval_content_with_bind_actions(testcase_dict.get("glob_var",{}))
             tracer.step("set global variables: {}".format(glob_vars))                
-            _Actions.WebContext.glob.update(glob_vars)            
+            _Actions.AppContext.glob.update(glob_vars)            
              
             tracer.normal("**** bind glob regular expression")
             globregx = {k: re.compile(v) for k,v in testcase_dict.get("glob_regx",{}).items()}
             tracer.step("set global regular: {}".format(globregx))            
-            _Actions.WebContext.glob.update(globregx)
+            _Actions.AppContext.glob.update(globregx)
                              
             tracer.normal("**** precommand")
             precommand = testcase_dict.get("pre_command",[])    
@@ -81,36 +82,36 @@ class _Driver(Runner):
             tracer.normal("**** steps")
             steps = testcase_dict["steps"]
             for step in steps:
-                #print("---")            
-                if not "webdriver" in step:
+                #print("---")
+                if not "adbdriver" in step:
                     continue
                 
-                if not step["webdriver"].get("action"):
-                    raise KeyError("webdriver.action")            
+                if not step["adbdriver"].get("action"):
+                    raise KeyError("adbdriver.action")            
                 
                 #print(step)
-                if step["webdriver"].get("by"):
-                    by = parser.eval_content_with_bind_actions(step["webdriver"].get("by"))
+                if step["adbdriver"].get("by"):
+                    by = parser.eval_content_with_bind_actions(step["adbdriver"].get("by"))
                     tracer.normal("preparing: by -> {}".format(by))
                     
-                    value = parser.eval_content_with_bind_actions(step["webdriver"].get("value"))
+                    value = parser.eval_content_with_bind_actions(step["adbdriver"].get("value"))
                     tracer.normal("preparing: value -> {}".format(value))
                     
-                    index = parser.eval_content_with_bind_actions(step["webdriver"].get("index", 0))
+                    index = parser.eval_content_with_bind_actions(step["adbdriver"].get("index", 0))
                     tracer.normal("preparing: index -> {}".format(index))
                     
-                    timeout = parser.eval_content_with_bind_actions(step["webdriver"].get("timeout", 10))
+                    timeout = parser.eval_content_with_bind_actions(step["adbdriver"].get("timeout", 10))
                     tracer.normal("preparing: timeout -> {}".format(timeout))                           
                 
                     prepare =parser.get_bind_function("SetControl")
                     prepare(by = by, value = value, index = index, timeout = timeout)
                                 
-                result = parser.eval_content_with_bind_actions(step["webdriver"]["action"])
+                result = parser.eval_content_with_bind_actions(step["adbdriver"]["action"])
                 #print(":",result)           
                 if result == False:
-                    tracer.fail(step["webdriver"]["action"])
+                    tracer.fail(step["adbdriver"]["action"])
                 else:
-                    tracer.ok(step["webdriver"]["action"])
+                    tracer.ok(step["adbdriver"]["action"])
                         
             tracer.normal("**** postcommand")
             postcommand = testcase_dict.get("post_command", [])        
@@ -139,33 +140,39 @@ class _Driver(Runner):
             #tracer.normal("globals:\n\t{}".format(parser._variables)) 
             tracer.stop()
         return tracer         
-            
-class LocalDriver(_Driver):
-    _browser = "chrome"
-    _download_path = None
-    _marionette = False
-    
-    def __init__(self):
-        super(LocalDriver,self).__init__(is_local_driver = True)        
-        
-        chrome_capabilities = SeleniumHatch.get_remote_browser_capabilities(browser = LocalDriver._browser, 
-                                                                            download_path=LocalDriver._download_path, 
-                                                                            marionette = LocalDriver._marionette)
-        self._default_drivers = [("", SeleniumHatch.gen_local_driver(browser = "chrome", capabilities = chrome_capabilities))]        
         
 class RemoteDriver(_Driver):
-    _browser = "chrome"
-    _download_path = None
-    _marionette = False
-    _remote_ip = "localhost"
-    _remote_port = 4444
+    _aapt_exe_path = 'aapt'
+    _apk_abs_path = None
+    _app_package = None
+    _app_activity = None
+    
+    _remote_ip = 'localhost'
+    _remote_port = [4723]
+    
     
     def __init__(self):
         super(RemoteDriver,self).__init__(is_local_driver = False)
-                
-        self._default_devices =[]
         
-        self._default_drivers = []        
+        desired_cap = Android.gen_capabilities(apk_abs_path = RemoteDriver._apk_abs_path, 
+                                               app_package= RemoteDriver._app_package, 
+                                               app_activity=RemoteDriver._app_activity,
+                                               aapt_exe_4path = RemoteDriver._aapt_exe_path)
+         
+        devices = Android.get_devices(self._adb_exe_path)
+        
+        self._default_devices =[]        
+        self._default_drivers = []
+        for device_id, properties in devices.items():  
+            
+        
+            desired_cap["deviceName"] = device_id
+            desired_cap["platformVersion"] = properties.get('android_version')
+             
+            driver = Android.gen_remote_driver(executor = Android.get_remote_executor("localhost", 4723), capabilities = desired_cap)
+        
+        
+                
         executors = SeleniumHatch.get_remote_executors(RemoteDriver._remote_ip, RemoteDriver._remote_port)
         chrome_capabilities = SeleniumHatch.get_remote_browser_capabilities(browser = RemoteDriver._browser, 
                                                                             download_path = RemoteDriver._download_path, 
@@ -173,5 +180,7 @@ class RemoteDriver(_Driver):
         for executor in executors:
             fn = FileSystemUtils.get_legal_filename(executor)
             self._default_devices.append(fn)            
-            self._default_drivers.append((fn, SeleniumHatch.gen_remote_driver(executor, chrome_capabilities)))            
+            self._default_drivers.append((fn, SeleniumHatch.gen_remote_driver(executor, chrome_capabilities)))   
+            
+
             

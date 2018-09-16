@@ -23,18 +23,19 @@ import unittest, os, re
 from appuidriver.remote.AppiumJs import AppiumJs
 from appuidriver.remote.AppiumHatch import Android
 from appuidriver.actions import AppWait,AppElement,AppContext,AppVerify,App,AppActions,AppTouchAction
+from rtsf.p_common import ModuleUtils
 
 class TestActions(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
         '''
-        @note:  adb version 1.0.39;  %ANDROID_HOME% = D:\auto\buffer\test\test_rtsf_web\android
+        @note:  adb version 1.0.39;  %ANDROID_HOME% = D:\auto\buffer\test\test_rtsf_web\android; 天天模拟器 v2.5.6
         '''        
-        platform_tools = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools'
+        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
         cls._adb_exe_path = os.path.join(platform_tools, "adb.exe")
         cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
-        cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
+        cls._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
                 
         cls.server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:6555")
         cls.server.start_server()
@@ -42,7 +43,7 @@ class TestActions(unittest.TestCase):
         devices = Android.get_devices(cls._adb_exe_path)
         device_id, properties = devices.popitem()
         
-        desired_cap = Android.gen_capabilities(cls._apk_abs_path, cls._aapt_exe_path)
+        desired_cap = Android.gen_capabilities(apk_abs_path = cls._apk_abs_path, aapt_exe_4path = cls._aapt_exe_path)
         desired_cap["deviceName"] = device_id
         desired_cap["platformVersion"] = properties.get('android_version')           
 #         desired_cap = {
@@ -139,9 +140,10 @@ class TestActions(unittest.TestCase):
         AppTouchAction.Tap()
         AppVerify.VerifyElemAttr('checked', "false")
         
-        AppTouchAction.Swipe("up", times = 1)        
+        AppTouchAction.Swipe("up", times = 1)
         AppElement.SetControl(by = 'id', value = 'android:id/text1')
-        AppTouchAction.Tap()        
+        AppTouchAction.Tap()
+            
         AppElement.SetControl(by = '-android uiautomator', value = 'text("Earth")')
         AppTouchAction.Tap()
         
@@ -198,12 +200,40 @@ class TestActions(unittest.TestCase):
         
         App.StartActivity(AppContext.GetVar('pkg'), AppContext.GetVar('web_view_active'))
         self.assertEqual(AppVerify.VerifyCurrentActivity('.view.WebView1'), True)        
-        App.CloseApp()    
+        App.CloseApp()
+    
+    def test_AppActions_rtsf(self):  
+        Actions = ModuleUtils.get_imported_module("appuidriver.actions")
+        Actions.App.driver = App.driver
+            
+        functions = {}
+        app_functions = ModuleUtils.get_callable_class_method_names(Actions.App)
+        app_element_functions = ModuleUtils.get_callable_class_method_names(Actions.AppElement)
+        app_context_functions = ModuleUtils.get_callable_class_method_names(Actions.AppContext)
+        app_wait_functions = ModuleUtils.get_callable_class_method_names(Actions.AppWait)
+        app_verify_functions = ModuleUtils.get_callable_class_method_names(Actions.AppVerify)
+        app_touch_action_functions = ModuleUtils.get_callable_class_method_names(Actions.AppTouchAction)
+        app_actions_functions = ModuleUtils.get_callable_class_method_names(Actions.AppActions)
+        functions.update(app_functions)
+        functions.update(app_element_functions)
+        functions.update(app_context_functions)
+        functions.update(app_wait_functions)
+        functions.update(app_verify_functions)
+        functions.update(app_touch_action_functions)
+        functions.update(app_actions_functions)  
+        self.assertNotEqual(functions, {})        
+        
+        print(functions)
+        functions.get("StartActivity")('io.appium.android.apis','.view.Controls1')
+        functions.get("SetControl")(by = 'id', value = 'io.appium.android.apis:id/edit')
+        functions.get("SendKeys")(u'你好    appium')
+        functions.get("TimeSleep")(1)
+        functions.get("CloseApp")()
 
 if __name__ == "__main__":
     unittest.main()
 #     suite = unittest.TestSuite()
-#     suite.addTest(TestActions("test_AppTouchAction"))
+#     suite.addTest(TestActions("test_App"))
 #     runner = unittest.TextTestRunner(verbosity=2)
 #     runner.run(suite)
     

@@ -20,24 +20,68 @@ UI and Web Http automation frame for python.
 
 '''
 
-import os,re,time
+import os,re,time, json
 import subprocess,requests
 from rtsf.p_common import IntelligentWaitUtils
 from rtsf.p_exception import NotFoundError
+from selenium.webdriver import DesiredCapabilities
+
 
 class AppiumJs:
     
-    def __init__(self, port = 4725, loglevel = "info:info"):  
-        '''                
-        @param port:  appium server监听的端口, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
+    def __init__(self, port, loglevel = "info:info"):  
+        '''        
+        @param port:  appium server listen port, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
         @param loglevel: appium的日志级别    
         '''
         self.__port = port
         self.__parse_npm_command()     
         self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
     
+    def node(self, ip, hub_address=("localhost", 4444)):
+        ''' appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset --nodeconfig c:\test\nodeconfig.json
+        @note: java -jar c:\selenium-server-standalone-3.14.0.jar -role hub
+        @param ip:    appium server listen ip, loopback ip not suggest to use in grid mode      
+        @param hub_address: hub address which node will connect to
+        '''
+        if ip in ('localhost', "127.0.0.1"):
+            print("Waring: loopback ip not suggest to use in grid mode. remoteHost is loopback address!!!")
+        
+        (_hub_ip, _hub_port) = hub_address
+        
+        cap = DesiredCapabilities.ANDROID.copy()
+
+        _nodeconfig = {
+            "capabilities": [cap],
+            "configuration": {                
+                "role": "node",
+                "remoteHost": "http://{}:{}".format(ip, self.__port),
+                
+                "url": "http://{}:{}/wd/hub".format(ip, self.__port),
+                "host": ip,
+                "port": self.__port,
+                
+                "hub": "http://{}:{}/grid/register".format(_hub_ip,_hub_port),
+                "hubHost": _hub_ip,
+                "hubPort": _hub_port,
+                
+                "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
+                "cleanUpCycle": 2000,
+                "maxSession": 1,
+                "register": True,
+                "registerCycle": 5000,
+                "timeout": 30000                
+            }
+        }
+                
+        with open('nodeconfig.json', 'w') as f:
+            f.write(json.dumps(_nodeconfig))
+            
+        self.appium_cmd.extend(["--nodeconfig", os.path.abspath("nodeconfig.json")])
+        return self        
+    
     def bind_device(self, device_id):
-        ''' appium server bind to a device id, whether the device is connected or not
+        ''' appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset
         @param device_id:  连接的设备uuid, appium server通过 uuid保持对已连接到当前机器的设备，进行自动化控制
         @param timeout: 超时时间， case脚本与appium创建的session，此时间后，超时
         '''
@@ -45,7 +89,7 @@ class AppiumJs:
         return self
     
     def start_server(self):
-        """start the appium server."""
+        """start the appium server."""        
         self.__subp = subprocess.Popen(self.appium_cmd)        
         #print("\tappium server pid[%s] is running." %self.__subp.pid)
         IntelligentWaitUtils.wait_for_connection(port = self.__port)
