@@ -34,6 +34,7 @@ class AppiumJs:
         @param port:  appium server listen port, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
         @param loglevel: appium的日志级别    
         '''
+        self._cap = DesiredCapabilities.ANDROID.copy()
         self.__port = port
         self.__parse_npm_command()     
         self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
@@ -49,10 +50,10 @@ class AppiumJs:
         
         (_hub_ip, _hub_port) = hub_address
         
-        cap = DesiredCapabilities.ANDROID.copy()
+        
 
         _nodeconfig = {
-            "capabilities": [cap],
+            "capabilities": [self._cap],
             "configuration": {                
                 "role": "node",
                 "remoteHost": "http://{}:{}".format(ip, self.__port),
@@ -80,11 +81,14 @@ class AppiumJs:
         self.appium_cmd.extend(["--nodeconfig", os.path.abspath("nodeconfig.json")])
         return self        
     
-    def bind_device(self, device_id):
+    def bind_device(self, device_id, platform_version=""):
         ''' appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset
         @param device_id:  连接的设备uuid, appium server通过 uuid保持对已连接到当前机器的设备，进行自动化控制
+        @param platform_version:  android设备的platform_version信息
         @param timeout: 超时时间， case脚本与appium创建的session，此时间后，超时
         '''
+        self._cap["udid"] = device_id
+        self._cap["udversion"] = platform_version
         self.appium_cmd.extend(["--udid", device_id, "--no-reset"])
         return self
     

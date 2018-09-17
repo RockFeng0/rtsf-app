@@ -20,7 +20,8 @@ UI and Web Http automation frame for python.
 
 '''
 
-import os,re
+import os,re, requests
+from rtsf.p_common import IntelligentWaitUtils
 from appium import webdriver
 
 class IOS(object):
@@ -127,12 +128,31 @@ class Android(object):
         return devices_info
     
     @staticmethod
-    def get_remote_executor(hub_ip, port = 4723):
-        ''' Get remote hosts from Selenium Grid Hub Console
-        @param hub_ip: hub ip of appium server ip
-        @param port: hub port of appium server port
+    def get_executor(server_ip, server_port = 4723):
+        '''  
+        @param server_ip: hub ip of appium server ip
+        @param server_port: hub port of appium server port
         '''
-        return "http://{}:{}/wd/hub".format(hub_ip, port)
+        return "http://{}:{}/wd/hub".format(server_ip, server_port)
+    
+    @staticmethod
+    def get_remote_executors(hub_ip, port = 4444):
+        ''' Get remote hosts from Selenium Grid Hub Console
+        @param hub_ip: hub ip of selenium grid hub
+        @param port: hub port of selenium grid hub
+        '''        
+        def req_remote_host():
+            resp = requests.get("http://%s:%s/grid/console" %(hub_ip, port))
+            
+            remote_hosts = ()
+            if resp.status_code == 200:
+                remote_hosts = re.findall("udid: ([\w/\.:]+).*udversion: ([\\w/\\.:]*).*remoteHost: ([\w/\.:]+)",resp.text)
+            return [(udid, udversion, host + "/wd/hub") for udid,udversion,host in remote_hosts]
+        
+        try:
+            return IntelligentWaitUtils.until(req_remote_host, 10)
+        except:
+            return ()
     
     @staticmethod
     def gen_remote_driver(executor, capabilities):

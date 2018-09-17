@@ -147,40 +147,21 @@ class RemoteDriver(_Driver):
     _app_package = None
     _app_activity = None
     
-    _remote_ip = 'localhost'
-    _remote_port = [4723]
-    
+    _remote_ip = "localhost"
+    _remote_port = 4444
     
     def __init__(self):
         super(RemoteDriver,self).__init__(is_local_driver = False)
-        
-        desired_cap = Android.gen_capabilities(apk_abs_path = RemoteDriver._apk_abs_path, 
-                                               app_package= RemoteDriver._app_package, 
-                                               app_activity=RemoteDriver._app_activity,
-                                               aapt_exe_4path = RemoteDriver._aapt_exe_path)
-         
-        devices = Android.get_devices(self._adb_exe_path)
-        
-        self._default_devices =[]        
-        self._default_drivers = []
-        for device_id, properties in devices.items():  
+        desired_cap = Android.gen_capabilities(apk_abs_path = RemoteDriver._apk_abs_path, app_package= RemoteDriver._app_package, 
+                                               app_activity=RemoteDriver._app_activity,aapt_exe_4path = RemoteDriver._aapt_exe_path)
+        self._default_devices =[]
+        self._default_drivers = []            
+        executors = Android.get_remote_executors(hub_ip = RemoteDriver._remote_ip, port = RemoteDriver._remote_port)
+        for udid, udversion, executor in executors:
+            self._default_devices.append(udid)
+            cap = desired_cap.copy()
+            cap["deviceName"] = udid
+            cap["platformVersion"] = udversion            
+            self._default_drivers.append((udid, Android.gen_remote_driver(executor = executor, capabilities = cap)))
             
-        
-            desired_cap["deviceName"] = device_id
-            desired_cap["platformVersion"] = properties.get('android_version')
-             
-            driver = Android.gen_remote_driver(executor = Android.get_remote_executor("localhost", 4723), capabilities = desired_cap)
-        
-        
-                
-        executors = SeleniumHatch.get_remote_executors(RemoteDriver._remote_ip, RemoteDriver._remote_port)
-        chrome_capabilities = SeleniumHatch.get_remote_browser_capabilities(browser = RemoteDriver._browser, 
-                                                                            download_path = RemoteDriver._download_path, 
-                                                                            marionette = RemoteDriver._marionette)
-        for executor in executors:
-            fn = FileSystemUtils.get_legal_filename(executor)
-            self._default_devices.append(fn)            
-            self._default_drivers.append((fn, SeleniumHatch.gen_remote_driver(executor, chrome_capabilities)))   
-            
-
             

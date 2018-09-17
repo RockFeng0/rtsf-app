@@ -22,14 +22,20 @@ UI and Web Http automation frame for python.
 import unittest, os
 from appuidriver.remote.AppiumHatch import Android
 from appuidriver.remote.AppiumJs import AppiumJs
+from webuidriver.remote.SeleniumJar import SeleniumJar
 
 class TestAndroid(unittest.TestCase):
     
     def setUp(self):
-        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
+        platform_tools = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools'
         self._adb_exe_path = os.path.join(platform_tools, "adb.exe")
         self._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
-        self._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
+        self._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
+        
+        jar_path =  r'C:\d_disk\auto\buffer\test\tools\seleniumjar\selenium-server-standalone-3.14.0.jar'
+        java_path = "java"
+        self._hub = SeleniumJar(jar_path, java_path).hub(4444)
+        
         
     def test_gen_capabilities(self):
         # e.g.1 with apk file 
@@ -71,7 +77,7 @@ class TestAndroid(unittest.TestCase):
             self.assertIsInstance(devices, dict)
              
     def test_gen_remote_driver(self):
-        server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:5555")        
+        server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:6555")        
         server.start_server()
          
         desired_cap = Android.gen_capabilities(apk_abs_path = self._apk_abs_path, aapt_exe_4path = self._aapt_exe_path)
@@ -84,9 +90,46 @@ class TestAndroid(unittest.TestCase):
         desired_cap["deviceName"] = device_id
         desired_cap["platformVersion"] = properties.get('android_version')
          
-        driver = Android.gen_remote_driver(executor = Android.get_remote_executor("localhost", 4723), capabilities = desired_cap)
+        driver = Android.gen_remote_driver(executor = Android.get_executor("localhost", 4723), capabilities = desired_cap)
         driver.quit()        
         server.stop_server()
         
+    def test_gen_remote_driver_grid(self):
+        self._hub.start_server()
+        
+        device_name = "127.0.0.1:6555"
+        device_version = "4.4.4"
+        node_ip = "localhost"
+        port = 4723
+        
+        server = AppiumJs(port = port).bind_device(device_id = device_name, platform_version = device_version).node(node_ip, hub_address=("localhost", 4444))
+        server.start_server()
+         
+        drivers = []
+        desired_cap = Android.gen_capabilities(apk_abs_path = self._apk_abs_path, aapt_exe_4path = self._aapt_exe_path)
+        executors = Android.get_remote_executors(hub_ip = "localhost", port = 4444)        
+        for udid, udversion, executor in executors:            
+            cap = desired_cap.copy()
+            cap["deviceName"] = udid
+            cap["platformVersion"] = udversion
+            
+            driver = Android.gen_remote_driver(executor = executor, capabilities = cap)
+            drivers.append(driver)
+            driver.quit()
+        
+        self.assertEqual(len(drivers), 1)
+        self.assertEqual(udid, device_name)
+        self.assertEqual(udversion, device_version)
+        self.assertEqual(executor, "http://{}:{}/wd/hub".format(node_ip, port))
+                
+        server.stop_server()
+        self._hub.stop_server()
+        
+        
 if __name__ == "__main__":
     unittest.main()
+#     suite = unittest.TestSuite()
+#     suite.addTest(TestAndroid("test_gen_remote_driver_grid"))    
+#     runner = unittest.TextTestRunner(verbosity=2)
+#     runner.run(suite)
+    
