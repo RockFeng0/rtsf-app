@@ -142,7 +142,7 @@ class _Driver(Runner):
         return tracer         
 
 class LocalDriver(_Driver):
-    ''' one local pc connect one devices '''
+    ''' O-O one local pc that running one appium connect one devices '''
     
     _adb_exe_path = 'adb'
     _aapt_exe_path = 'aapt'
@@ -164,7 +164,7 @@ class LocalDriver(_Driver):
         
         
 class RemoteDriver(_Driver):
-    ''' some pc connect some devices, each pc at most 20 devices '''
+    ''' M-M some pc that running some appium connect some devices, each pc at most 20 devices '''
     _aapt_exe_path = 'aapt'
     _apk_abs_path = None
     _app_package = None
