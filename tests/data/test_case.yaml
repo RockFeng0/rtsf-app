@@ -1,7 +1,7 @@
 # yaml测试用例，模型示例:
 - project:
-    name: xxx系统
-    module: 登陆模块-功能测试
+    name: xxx App
+    module: xxx模块-功能测试
     
 - case:
     # id 必填
@@ -17,69 +17,110 @@
     
     # 定义正则表达式, 定义的字符串不会解析
     glob_regx:
-        rex_title: '百度一下，你就知道'
+        rex_bar_title: 'Views/Controls/(.*)'
     
     # 定义变量， 效果同 SetVar(name, value)
     glob_var:
-        url1: https://www.baidu.com
-        url2: https://www.sina.com
+        app_package: io.appium.android.apis
+        app_main_activity: .ApiDemos
+        app_view_webview_activity: .view.WebView1
+        app_view_button_activity: .view.Buttons1
+        app_view_control_activity: .view.Controls1
+        app_view_dragdrop_activity: .view.DragAndDropDemo
+        app_graphic_paint_activity: .graphics.TouchPaint
+        app_animation_activity: .animation.BouncingBalls
         
     # pre_command 选填
     pre_command:
-        - ${NavigateTo($url1)}
-        # - ${DyStrData("title", re.compile(rex_title))}
-        # - ${VerifyTitle($title)}
+        - ${StartActivity($app_package, $app_view_control_activity)}
+        - ${DyStrData(var_bar_title, $rex_bar_title)}
+        - ${VerifyVar(var_bar_title, 1. Light Theme)}  
         
     # steps 必填
-    steps:        
-        # webdriver 测试web ui 时使用
-        
-        - webdriver:
-            action: ${NavigateTo($url2)}
-            
-        - webdriver:
-            action: ${ScrollTo(0, 1000)}
-        
-        - webdriver:
-            action: ${TimeSleep(1)}
-        
-        - webdriver:
-            action: ${Refresh()}
-        
-        - webdriver:
-            action: ${NewTab($url1)}
-                
-        # 在webdriver中，设置 SetControl参数，定位元素
-        - webdriver:
-            by: css selector
-            value: '#kw'
+    steps:      
+    
+        # 在appdriver中，定位元素
+        - appdriver:
+            by: id
+            value: io.appium.android.apis:id/edit
             index: 0
             timeout: 10
-            action: ${SendKeys(123)}
-        
-        - webdriver:
-            action: ${TimeSleep(1)}
+            action: ${SendKeys(你好  -  hello)}
             
-        # 直接使用 SetControl关键字，定位元素
-        - webdriver:
-            action: ${SetControl(by=css selector, value=#kw)}
-        
-        - webdriver:
-            action: ${SendKeys(456)}
-        
-        - webdriver:
-            action: ${SetControl(by=id, value=su)}
-        
-        - webdriver:
-            action: ${DyAttrData(id_su_value, value)}
-            
-        - webdriver:
+        - appdriver:
             action: ${TimeSleep(1)}
         
-        - webdriver:
-            action: ${WebClose()} 
-                   
+        - appdriver:
+            by: -android uiautomator
+            value: text("Checkbox 1")
+            index: 0
+            timeout: 10
+            action: ${Tap()}
+                        
+        - appdriver:
+            action: ${VerifyElemAttr(checked, true)}
+        
+        - appdriver:
+            action: ${Tap()}
+            
+        - appdriver:
+            action: ${VerifyElemAttr(checked, false)}
+        
+        - appdriver:
+            action: ${TimeSleep(1)} 
+        
+        - appdriver:
+            action: ${Swipe(up, 1)}
+                
+        - appdriver:
+            by: id
+            value: android:id/text1            
+            action: ${Tap()} 
+            
+        - appdriver:
+            by: -android uiautomator
+            value: 'text("Earth")'
+            action: ${Tap()}
+                           
     # post_command 选填
     post_command:
-        - ${WebQuit()}
+        - ${Back()}
+        - ${CloseApp()}
+        
+- case:
+    id: ATP-2    
+    desc: 画板-画画
+    responsible: case_tester2
+    tester: case_tester2     
+    pre_command:
+        - ${StartActivity($app_package, $app_graphic_paint_activity)}        
+    steps:
+        - appdriver:
+            action: ${Draw()}
+    post_command:
+        - ${CloseApp()}
+            
+- case:
+    id: ATP-3  
+    desc: 拖拽UI
+    pre_command:
+        - ${StartActivity($app_package, $app_view_dragdrop_activity)}        
+    steps:
+        - appdriver:
+            by: id
+            value: io.appium.android.apis:id/drag_dot_1
+            action: ${LongPress()}
+        
+        - appdriver:
+            by: id
+            value: io.appium.android.apis:id/drag_dot_2
+            action: ${MoveTo()}
+        
+        - appdriver:
+            action: ${Release()}
+    post_command:
+        - ${QuitApp()}
+            
+            
+            
     

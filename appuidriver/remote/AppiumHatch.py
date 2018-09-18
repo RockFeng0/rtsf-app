@@ -39,12 +39,10 @@ class Android(object):
     @classmethod
     def gen_capabilities(cls, apk_abs_path = None, app_package=None, app_activity=None, aapt_exe_4path = "aapt"):
         ''' generate capabilities from android apk
-        @note: app_package and app_activity are optional to start an activity if apk_abs_path is not None
-        @note: app_package and app_activity are required to start an activity if apk_abs_path is None        
-         
+        
         @param apk_abs_path:  absolute android package path  
-        @param app_package: app package name
-        @param app_activity: app activity name
+        @param app_package: app package name for `start_activity` first parameter.  if None, will grab from 'apk_abs_path'
+        @param app_activity: app activity name for `start_activity` second parameter. if None, will grab from 'apk_abs_path'
         @param aapt_exe_4path: absoulte file path of `aapt.exe`, default is `aapt`  if ENV have been set
         @return: desired capabilities         
         '''

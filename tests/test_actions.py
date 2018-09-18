@@ -32,10 +32,10 @@ class TestActions(unittest.TestCase):
         '''
         @note:  adb version 1.0.39;  %ANDROID_HOME% = D:\auto\buffer\test\test_rtsf_web\android; 天天模拟器 v2.5.6
         '''        
-        platform_tools = r'D:\auto\buffer\test\test_rtsf_web\android\platform-tools'
+        platform_tools = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools'
         cls._adb_exe_path = os.path.join(platform_tools, "adb.exe")
         cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
-        cls._apk_abs_path = r'D:\auto\buffer\test\test_rtsf_web\android\ApiDemos-debug.apk'
+        cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
                 
         cls.server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:6555")
         cls.server.start_server()
@@ -58,7 +58,7 @@ class TestActions(unittest.TestCase):
 #             'resetKeyboard': True,
 #             'newCommandTimeout':120000,
 #         }
-        App.driver = Android.gen_remote_driver(executor = Android.get_remote_executor("127.0.0.1", 4723), capabilities = desired_cap)
+        App.driver = Android.gen_remote_driver(executor = Android.get_executor("127.0.0.1", 4723), capabilities = desired_cap)
     
     @classmethod
     def tearDownClass(cls):
@@ -112,17 +112,20 @@ class TestActions(unittest.TestCase):
         app_package = 'io.appium.android.apis'
         app_activity = '.animation.BouncingBalls'
         
+        AppContext.SetVar("test_verify_var", "!!!")
+        self.assertTrue(AppVerify.VerifyVar("test_verify_var", "!!!"), True)
+        
         App.StartActivity(app_package, app_activity)
         self.assertTrue(AppVerify.VerifyAppInstalled(app_package))
         self.assertTrue(AppVerify.VerifyCurrentActivity(app_activity))
-        
+         
         AppElement.SetControl(by = '-android uiautomator', value = 'text("Animation/Bouncing Balls")')
         self.assertTrue(AppVerify.VerifyElemEnabled())
         self.assertTrue(AppVerify.VerifyElemVisible())
         self.assertTrue(AppVerify.VerifyElemAttr('text', 'Animation/Bouncing Balls'))
         self.assertTrue(AppVerify.VerifyElemAttr('clickable', 'false'))
         self.assertTrue(AppVerify.VerifyText("Animation/Bouncing Balls"))
-        
+                 
         AppElement.SetControl(by = 'id', value = 'io.appium.android.apis:id/container')
         AppTouchAction.Draw()
         App.CloseApp()
@@ -233,7 +236,7 @@ class TestActions(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 #     suite = unittest.TestSuite()
-#     suite.addTest(TestActions("test_App"))
+#     suite.addTest(TestActions("test_AppVerify"))
 #     runner = unittest.TextTestRunner(verbosity=2)
 #     runner.run(suite)
     

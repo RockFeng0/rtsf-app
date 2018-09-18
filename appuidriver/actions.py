@@ -95,8 +95,7 @@ class App(object):
             WebDriverWait(App.driver, 10).until(lambda driver: len(driver.contexts) >= 2)
             new_context = App.driver.contexts[-1]
             App.driver.switch_to.context(new_context)       
-        except Exception as e:
-            print("@@@!!!", e)            
+        except:            
             print("Waring: Timeout at 10 seconds. New context Not Found.")
             return False
         
@@ -144,8 +143,7 @@ class AppElement(object):
             raise Exception("Invalid selector[%s]." %cls.__control["by"])
         
         driver = App.driver
-        try:
-            print("by: ", cls.__control["by"], "value: ",cls.__control["value"])            
+        try:            
             elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
         except:                        
             raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
@@ -317,10 +315,16 @@ class AppWait(AppElement):
 
 class AppVerify(AppElement):
     
+    @classmethod
+    def VerifyVar(cls, name, expect_value):
+        if AppContext.GetVar(name) == expect_value:
+            return True
+        else:
+            return False
     
     @classmethod
     def VerifyAppInstalled(cls,app_package):
-        return App.driver.is_app_installed(app_package)            
+        return App.driver.is_app_installed(app_package)
     
     @classmethod
     def VerifyCurrentActivity(cls, app_activity):        

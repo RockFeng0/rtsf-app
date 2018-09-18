@@ -26,9 +26,9 @@ from rtsf.p_exception import FunctionNotFound,VariableNotFound
 from appuidriver.remote.AppiumHatch import Android
         
 class _Driver(Runner):     
-    def __init__(self):
+    def __init__(self, is_local_driver = True):
         super(_Driver,self).__init__()
-        self._local_driver = False
+        self._local_driver = is_local_driver
     
     def run_test(self, testcase_dict, driver_map):
         fn, fn_driver = driver_map        
@@ -83,35 +83,35 @@ class _Driver(Runner):
             steps = testcase_dict["steps"]
             for step in steps:
                 #print("---")
-                if not "adbdriver" in step:
+                if not "appdriver" in step:
                     continue
                 
-                if not step["adbdriver"].get("action"):
-                    raise KeyError("adbdriver.action")            
+                if not step["appdriver"].get("action"):
+                    raise KeyError("appdriver.action")            
                 
                 #print(step)
-                if step["adbdriver"].get("by"):
-                    by = parser.eval_content_with_bind_actions(step["adbdriver"].get("by"))
+                if step["appdriver"].get("by"):
+                    by = parser.eval_content_with_bind_actions(step["appdriver"].get("by"))
                     tracer.normal("preparing: by -> {}".format(by))
                     
-                    value = parser.eval_content_with_bind_actions(step["adbdriver"].get("value"))
+                    value = parser.eval_content_with_bind_actions(step["appdriver"].get("value"))
                     tracer.normal("preparing: value -> {}".format(value))
                     
-                    index = parser.eval_content_with_bind_actions(step["adbdriver"].get("index", 0))
+                    index = parser.eval_content_with_bind_actions(step["appdriver"].get("index", 0))
                     tracer.normal("preparing: index -> {}".format(index))
                     
-                    timeout = parser.eval_content_with_bind_actions(step["adbdriver"].get("timeout", 10))
+                    timeout = parser.eval_content_with_bind_actions(step["appdriver"].get("timeout", 10))
                     tracer.normal("preparing: timeout -> {}".format(timeout))                           
                 
                     prepare =parser.get_bind_function("SetControl")
                     prepare(by = by, value = value, index = index, timeout = timeout)
                                 
-                result = parser.eval_content_with_bind_actions(step["adbdriver"]["action"])
+                result = parser.eval_content_with_bind_actions(step["appdriver"]["action"])
                 #print(":",result)           
                 if result == False:
-                    tracer.fail(step["adbdriver"]["action"])
+                    tracer.fail(step["appdriver"]["action"])
                 else:
-                    tracer.ok(step["adbdriver"]["action"])
+                    tracer.ok(step["appdriver"]["action"])
                         
             tracer.normal("**** postcommand")
             postcommand = testcase_dict.get("post_command", [])        
@@ -140,8 +140,31 @@ class _Driver(Runner):
             #tracer.normal("globals:\n\t{}".format(parser._variables)) 
             tracer.stop()
         return tracer         
+
+class LocalDriver(_Driver):
+    ''' one local pc connect one devices '''
+    
+    _adb_exe_path = 'adb'
+    _aapt_exe_path = 'aapt'
+    _apk_abs_path = None
+    _app_package = None
+    _app_activity = None
+        
+    def __init__(self):
+        super(LocalDriver,self).__init__(is_local_driver = True)
+        desired_cap = Android.gen_capabilities(apk_abs_path = LocalDriver._apk_abs_path, app_package= LocalDriver._app_package, 
+                                               app_activity=LocalDriver._app_activity,aapt_exe_4path = LocalDriver._aapt_exe_path)
+        
+        devices = Android.get_devices(LocalDriver._adb_exe_path)        
+        device_id, properties = devices.popitem()
+        desired_cap["deviceName"] = device_id
+        desired_cap["platformVersion"] = properties.get('android_version')
+        
+        self._default_drivers = [("", Android.gen_remote_driver(executor = Android.get_executor("localhost", 4723), capabilities = desired_cap))]
+        
         
 class RemoteDriver(_Driver):
+    ''' some pc connect some devices, each pc at most 20 devices '''
     _aapt_exe_path = 'aapt'
     _apk_abs_path = None
     _app_package = None
@@ -155,13 +178,15 @@ class RemoteDriver(_Driver):
         desired_cap = Android.gen_capabilities(apk_abs_path = RemoteDriver._apk_abs_path, app_package= RemoteDriver._app_package, 
                                                app_activity=RemoteDriver._app_activity,aapt_exe_4path = RemoteDriver._aapt_exe_path)
         self._default_devices =[]
-        self._default_drivers = []            
+        self._default_drivers = []
         executors = Android.get_remote_executors(hub_ip = RemoteDriver._remote_ip, port = RemoteDriver._remote_port)
         for udid, udversion, executor in executors:
-            self._default_devices.append(udid)
+            fn = FileSystemUtils.get_legal_filename(executor)
+            self._default_devices.append(fn)
+            
             cap = desired_cap.copy()
             cap["deviceName"] = udid
             cap["platformVersion"] = udversion            
-            self._default_drivers.append((udid, Android.gen_remote_driver(executor = executor, capabilities = cap)))
+            self._default_drivers.append((fn, Android.gen_remote_driver(executor = executor, capabilities = cap)))
             
             
