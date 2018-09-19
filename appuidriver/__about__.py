@@ -19,7 +19,7 @@ UI and Web Http automation frame for python.
 
 '''
 
-__title__           = "appuidriver"
+__title__           = "rtsf-app"
 __short_desc__      = "only for android ui test, base on rtsf"
 __version__         = 1.0
 __autor__           = u"罗科峰"

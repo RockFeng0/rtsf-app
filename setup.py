@@ -20,24 +20,24 @@ Provide a function for the automation test
 
 
 
-from webuidriver import __about__
+from appuidriver import __about__
 from setuptools import setup, find_packages
 
 install_requires = [
     "Appium-Python-Client",
     "requests",
     "rtsf",
-    "webuidriver",
+    "rtsf-web",
 ]
 
 dependency_links=[
 "git+https://github.com/RockFeng0/rtsf.git#egg=rtsf-0",
-"git+https://github.com/RockFeng0/rtsf-web.git#egg=webuidriver-0",
+"git+https://github.com/RockFeng0/rtsf-web.git#egg=rtsf-web-0",
 ]
 
 setup(
         name = __about__.__title__,
-        version=__about__.__version__,        
+        version=__about__.__version__,
         description=__about__.__short_desc__,
         author=__about__.__autor__,
         author_email=__about__.__author_email__,
