@@ -54,6 +54,7 @@ setup(
             'aldriver=appuidriver.cli:local_main_run', # one appium server <--> only one android device  
             'ardriver=appuidriver.cli:remote_main_run', # appium nodes <--> android devices          
             'appserver=appuidriver.cli:appium_main_run', # appium server, appium node for grid mode
+            'ainfo=appuidriver.cli:tools_main_run', # devices info or apk info
         ]
     },
     )

@@ -27,7 +27,32 @@ from appuidriver.remote.AppiumHatch import Android
 from appuidriver.remote.AppiumJs import AppiumJs
 from appuidriver.__about__ import __version__
     
+
+def tools_main_run():
+    parser = argparse.ArgumentParser(description="Get devices info and get apk info.")
+        
+    parser.add_argument(
+        '--apk',
+        help="apk file path.")
     
+    parser.add_argument(
+        '--adb', default = 'adb',
+        help="set the `adb` path if ANDROID_HOME not configured. default: adb ")
+    
+    parser.add_argument(
+        '--aapt', default = 'aapt',
+        help="set the `aapt` path if ANDROID_HOME not configured. default: aapt ")
+    
+    color_print("appuidriver {}".format(__version__), "GREEN")
+    
+    args = parser.parse_args()    
+    
+    if args.apk:
+        print(Android.gen_capabilities(apk_abs_path = args.apk, aapt_exe_4path = args.aapt))
+    else:
+        devices = Android.get_devices(args.adb)
+        print(devices)
+            
 def appium_main_run():
     
     parser = argparse.ArgumentParser(description="appium server command line.")
@@ -86,16 +111,16 @@ def local_main_run():
     
     
     parser.add_argument(
-        '--package',default = None,
-        help="app package name under test. default: None")
+        '--package',
+        help="app package name under test.")
     
     parser.add_argument(
-        '--activity',default = None,
-        help="app activity name. default: None")
+        '--activity',
+        help="app activity name. ")
     
     parser.add_argument(
-        '--apk', default = None,
-        help="apk file path. default: None")
+        '--apk', 
+        help="apk file path.")
     
     parser.add_argument(
         '--adb', default = 'adb',
@@ -137,16 +162,16 @@ def remote_main_run():
     
     
     parser.add_argument(
-        '--package',default = None,
-        help="app package name under test. default: None")
+        '--package',
+        help="app package name under test.")
     
     parser.add_argument(
-        '--activity',default = None,
-        help="app activity name. default: None")
+        '--activity',
+        help="app activity name.")
     
     parser.add_argument(
-        '--apk', default = None,
-        help="apk file path. default: None")
+        '--apk',
+        help="apk file path.")
         
     parser.add_argument(
         '--aapt', default = 'aapt',
