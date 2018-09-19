@@ -49,8 +49,6 @@ class AppiumJs:
             print("Waring: loopback ip not suggest to use in grid mode. remoteHost is loopback address!!!")
         
         (_hub_ip, _hub_port) = hub_address
-        
-        
 
         _nodeconfig = {
             "capabilities": [self._cap],

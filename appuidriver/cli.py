@@ -80,10 +80,10 @@ def appium_main_run():
     color_print("appuidriver {}".format(__version__), "GREEN")
     
     args = parser.parse_args()    
-    if args.address.split(":",1) < 2:
+    if len(args.address.split(":",1)) < 2:
         return "command parameter error."
-    ip, port = args.address.split(":",1)        
-    server = AppiumJs(port = port)
+    ip, port = args.address.split(":",1)
+    server = AppiumJs(port = int(port))
     
     if args.device_name:
         server.bind_device(device_id = args.device_name, platform_version = args.device_version)
@@ -132,17 +132,23 @@ def local_main_run():
         
     color_print("appuidriver {}".format(__version__), "GREEN")
     args = parser.parse_args()
-    logger.setup_logger(args.log_level, args.log_file)    
-        
-    LocalDriver._apk_abs_path  = args.apk
-    LocalDriver._app_package   = args.package
-    LocalDriver._app_activity  = args.activity
-    LocalDriver._aapt_exe_path = args.adb
-    LocalDriver._aapt_exe_path = args.aapt
+    logger.setup_logger(args.log_level, args.log_file)
     
-    runner = TestRunner(runner = LocalDriver).run(args.case_file)
-    html_report = runner.gen_html_report()
-    color_print("report: {}".format(html_report))
+    result1 = True if args.apk else False
+    result2 = True if args.package and args.activity else False
+    if result1 or result2:
+        LocalDriver._apk_abs_path  = args.apk
+        LocalDriver._app_package   = args.package
+        LocalDriver._app_activity  = args.activity
+        LocalDriver._aapt_exe_path = args.adb
+        LocalDriver._aapt_exe_path = args.aapt
+        
+        runner = TestRunner(runner = LocalDriver).run(args.case_file)
+        html_report = runner.gen_html_report()
+        color_print("report: {}".format(html_report))
+    else:
+        print("The parameter must include either an apk or package&activity.")
+        return
     
 def remote_main_run():
     
@@ -188,17 +194,25 @@ def remote_main_run():
     color_print("appuidriver {}".format(__version__), "GREEN")
     args = parser.parse_args()
     logger.setup_logger(args.log_level, args.log_file)    
-        
-    RemoteDriver._apk_abs_path  = args.apk
-    RemoteDriver._app_package   = args.package
-    RemoteDriver._app_activity  = args.activity
-    RemoteDriver._aapt_exe_path = args.aapt
-    RemoteDriver._remote_ip = args.ip
-    RemoteDriver._remote_port = args.port
     
-    runner = TestRunner(runner = RemoteDriver).run(args.case_file)
-    html_report = runner.gen_html_report()
-    color_print("report: {}".format(html_report))
+    result1 = True if args.apk else False
+    result2 = True if args.package and args.activity else False
+    if result1 or result2:
+        RemoteDriver._apk_abs_path  = args.apk
+        RemoteDriver._app_package   = args.package
+        RemoteDriver._app_activity  = args.activity
+        RemoteDriver._aapt_exe_path = args.aapt
+        RemoteDriver._remote_ip = args.ip
+        RemoteDriver._remote_port = args.port
+        
+        runner = TestRunner(runner = RemoteDriver).run(args.case_file)
+        html_report = runner.gen_html_report()
+        color_print("report: {}".format(html_report))
+    else:
+        print("The parameter must include either an apk or package&activity.")
+        return
+    
+    
     
     
     
