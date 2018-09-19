@@ -26,11 +26,13 @@ from setuptools import setup, find_packages
 install_requires = [
     "Appium-Python-Client",
     "requests",
-    "rtsf",    
+    "rtsf",
+    "webuidriver",
 ]
 
 dependency_links=[
-"git+https://github.com/RockFeng0/rtsf.git#egg=rtsf-0"
+"git+https://github.com/RockFeng0/rtsf.git#egg=rtsf-0",
+"git+https://github.com/RockFeng0/rtsf-web.git#egg=webuidriver-0",
 ]
 
 setup(
@@ -43,16 +45,15 @@ setup(
         license=__about__.__license__,
         python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
         packages=find_packages(exclude=()),        
-        keywords='test web ui',
+        keywords='test android ui',
         install_requires=install_requires,
         dependency_links=dependency_links,
         extras_require={},
         entry_points={
         'console_scripts': [
-            'wldriver=webuidriver.cli:local_main_run', # local driver
-            'wrdriver=webuidriver.cli:remote_main_run', # remote driver
-            'wrhub=webuidriver.cli:hub_main_run', # selenium grid hub
-            'wrnode=webuidriver.cli:node_main_run', # selenium grid node
+            'aldriver=appuidriver.cli:local_main_run', # one appium server <--> only one android device  
+            'ardriver=appuidriver.cli:remote_main_run', # appium nodes <--> android devices          
+            'appserver=appuidriver.cli:appium_main_run', # appium server, appium node for grid mode
         ]
     },
     )
