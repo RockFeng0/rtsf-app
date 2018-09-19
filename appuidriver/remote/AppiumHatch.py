@@ -20,7 +20,7 @@ UI and Web Http automation frame for python.
 
 '''
 
-import os,re, requests
+import os,re, requests, subprocess
 from rtsf.p_common import IntelligentWaitUtils
 from appium import webdriver
 
@@ -165,9 +165,10 @@ class Android(object):
     @classmethod
     def __command(cls, cmd, readlines = True):
         ''' just execute the command '''
-        with os.popen(cmd) as f:
-            if readlines:
-                result = f.readlines()
-            else:
-                result = f.read()
+        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if readlines:
+            result = [i.decode('utf-8') for i in subp.stdout.readlines()]
+        else:
+            result = subp.stdout.read().decode('utf-8')
+        
         return result

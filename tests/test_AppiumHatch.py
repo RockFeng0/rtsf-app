@@ -129,7 +129,7 @@ class TestAndroid(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 #     suite = unittest.TestSuite()
-#     suite.addTest(TestAndroid("test_gen_remote_driver_grid"))    
+#     suite.addTest(TestAndroid("test_get_devices"))    
 #     runner = unittest.TextTestRunner(verbosity=2)
 #     runner.run(suite)
     
