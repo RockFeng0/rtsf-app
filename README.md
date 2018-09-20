@@ -35,16 +35,16 @@ python setup.py install
 
 **测试场景假设**
 
-apk(待测试的apk): C:\ApiDemos-debug.apk
-case(自动化测试用例): C:\test_case.yaml
+- apk(待测试的apk): C:\ApiDemos-debug.apk
+- case(自动化测试用例): C:\test_case.yaml
 
-PC_A_IP(本机): 192.168.1.1
-PC_A_Android_Device_ID(天天模拟器): 127.0.0.1:6555
-...
+- PC_A_IP(本机): 192.168.1.1
+- PC_A_Android_Device_ID(天天模拟器): 127.0.0.1:6555
+- ...
 
-PC_B_IP(远端机): 192.168.1.2
-PC_B_Android_Device_ID(天天模拟器): 127.0.0.1:6555
-...
+- PC_B_IP(远端机): 192.168.1.2
+- PC_B_Android_Device_ID(天天模拟器): 127.0.0.1:6555
+- ...
 
 注意: adb.exe最多支持每台pc链接20台设备
  
