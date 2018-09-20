@@ -34,6 +34,7 @@ python setup.py install
 # 命令介绍
 
 **测试场景假设**
+
 apk(待测试的apk): C:\ApiDemos-debug.apk
 case(自动化测试用例): C:\test_case.yaml
 
@@ -48,9 +49,11 @@ PC_B_Android_Device_ID(天天模拟器): 127.0.0.1:6555
 注意: adb.exe最多支持每台pc链接20台设备
  
 **场景一  本地测试**
+
 一般情况下，就是一台PC，连接一台设备的测试场景
 
 **场景二 远程控制测试**
+
 适用于， 多台PC连接多台设备的测试场景,其原理是基于selenium RC，使用selenium Grid进行分布式测试
 
 
