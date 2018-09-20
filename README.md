@@ -124,6 +124,11 @@ python setup.py install
 
 3. 远程执行测试
 
+注意:
+
+- 如果使用 --apk参数，那么 确保 PC A 和 PC B,在该指定的文件路径中，存在这个apk。
+- 如果使用 --package和--activity参数，那么确保，连接到PC的手机，已经装了这个apk
+
 ```
 # aldriver 与 ardriver的区别就在于: ardriver支持 ip和port参数，允许grid模式
 > ardriver C:\test_case.yaml --apk C:\ApiDemos-debug.apk --ip 192.168.1.1 --port 4444
