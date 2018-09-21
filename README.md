@@ -33,30 +33,6 @@ python setup.py install
 
 # 命令介绍
 
-**测试场景假设**
-
-- apk(待测试的apk): C:\ApiDemos-debug.apk
-- case(自动化测试用例): C:\test_case.yaml
-
-- PC_A_IP(本机): 192.168.1.1
-- PC_A_Android_Device_ID(天天模拟器): 127.0.0.1:6555
-- ...
-
-- PC_B_IP(远端机): 192.168.1.2
-- PC_B_Android_Device_ID(天天模拟器): 127.0.0.1:6555
-- ...
-
-注意: adb.exe最多支持每台pc链接20台设备
- 
-**场景一  本地测试**
-
-一般情况下，就是一台PC，连接一台设备的测试场景
-
-**场景二 远程控制测试**
-
-适用于， 多台PC连接多台设备的测试场景,其原理是基于selenium RC，使用selenium Grid进行分布式测试
-
-
 ## 工具命令
 1. 查看设备信息, 格式: 设备id:设备属性     ,设备属性中，android_version就是设备版本，即android device platform version
 
@@ -74,18 +50,31 @@ python setup.py install
 {'platformName': 'Android', 'deviceName': None, 'platformVersion': None, 'app': 'C:\\d_disk\\auto\\buffer\\test\\tools\\android\\ApiDemos-debug.apk', 'appPackage': 'io.appium.android.apis', 'appWaitPackage': 'io.appium.android.apis', 'appActivity': 'io.appium.android.apis.ApiDemos', 'unicodeKeyboard': True, 'resetKeyboard': True, 'newCommandTimeout': 120000}
 ```
 
-## 本地测试-命令
+## 场景一  本地测试
+
+一般情况下，就是一台PC，连接一台设备的测试场景，步骤如下
+
+**测试场景假设**
+
+- apk(待测试的apk): C:\ApiDemos-debug.apk
+- case(自动化测试用例): C:\test_case.yaml
+
+- PC_A_IP(本机): 192.168.1.1
+- PC_A_Android_Device_ID(天天模拟器): 127.0.0.1:6555
+
 1. 开启appium server,并绑定待测设备
 
 ```
-#  PC_A，监听4723端口，该端口绑定  id为127.0.0.1:6555并且版本为4.4.4的设备；注意，监听端口+1也会被占用  
+#  PC_A，监听4723端口，该端口绑定  id为127.0.0.1:6555并且版本为4.4.4的设备；注意，监听端口+1也会被占用
 > appserver 192.168.1.1:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4
 
 ```
-2. 本地执行测试
+
+2. aldriver驱动测试
 
 ```
-# 注意，aldriver执行本地测试的时候， PC_A，必须是监听4723端口
+# aldriver命令执行本地测试，该命令主动连接本地PC_A的4723端口，并驱动adb连接的第一个设备进行测试
+# 这就是为什么，在假设场景中，要求appserver使用PC_A使用本机IP和4723端口，并绑定名字是 127.0.0.1:6555 的设备
 > aldriver C:\test_case.yaml --apk C:\ApiDemos-debug.apk
 
 # 如果，你没有apk,但是通过 工具命令，获取到 appPackage和appActivity，可以使用下述命令；原理相当于appium中的，start_activity(package, activity)
@@ -95,43 +84,80 @@ python setup.py install
 #> aldriver C:\test_case.yaml --apk C:\ApiDemos-debug.apk --package io.appium.android.apis --activity io.appium.android.apis.ApiDemos
 ```
 
-3. 执行结束后， ctrl + c 结束端口占用
+3. 释放端口占用， ctrl + c 结束端口占用
 
-## 远程控制测试-命令
+## 场景二 远程控制测试-Selenium Grid Mode
+
+背景: 比如，手上有1000条相对独立的测试case，一台PC一台设备的方式完成这些case的验证，效率较低。那么，并行测试是最好的解决办法
+
+分析: 
+- 多台PC连接多台设备的测试场景假设,其原理是基于selenium RC，使用selenium Grid的方式，使得appium server作为node节点，进行分布式测试
+- 可是，即使是分布式测试，它的过程也是一个并发的过程，每台设备分别都要测试1000条case。好比很多车在支路上跑，汇入的主干道却只有一条
+- 需要做的，就是让这1000条case，分配给这些设备，让它们并行测试。解决方法：多重hub
+
+**测试场景假设**
+
+- apk(待测试的apk): C:\ApiDemos-debug.apk
+- case1(自动化测试用例): C:\test_case1.yaml
+- case2(自动化测试用例): C:\test_case2.yaml
+- ...
+
+- PC_Server_IP(Grid Hub端): 192.168.1.254
+
+- PC_A_IP(本机): 192.168.1.1
+- PC_A_Android_Device_ID(天天模拟器): 127.0.0.1:6555
+- ...
+
+- PC_B_IP(远端机): 192.168.1.2
+- PC_B_Android_Device_ID(天天模拟器): 127.0.0.1:6555
+- ...
+
+并行测试，PC_A连接的所有机器，测试case1;PC_B连接的所有机器,测试case2
+
+注意: adb.exe最多支持每台pc链接20台设备
+
 1. 开启selenium grid hub, 命令详解，参见[rtsf-web](https://github.com/RockFeng0/rtsf-web)
 
 ```
-# PC_A hub(192.168.1.1:4444)
-> wrhub C:\selenium-server-standalone-3.14.0.jar
+# PC_Server设置PC_A的hub
+> wrhub C:\selenium-server-standalone-3.14.0.jar --port 4444
+
+# PC_Server设置PC_B的hub
+> wrhub C:\selenium-server-standalone-3.14.0.jar --port 5555
 ```
 
 2. 开启appium server node,并绑定待测设备
 
 ```
 # PC_A  4723端口绑定设备，并注册node节点 ； 注意，远程控制模式，可以注册多台机器
-> appserver 192.168.1.1:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4 --hub-ip 192.168.1.1 --hub-port 4444
+> appserver 192.168.1.1:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4 --hub-ip 192.168.1.254 --hub-port 4444
 
 # PC_A  4725端口绑定设备，并注册node节点 
-> appserver 192.168.1.1:4725 --device-name DEVICE_ID --device-version DEVICE_VERSION --hub-ip 192.168.1.1 --hub-port 4444
+> appserver 192.168.1.1:4725 --device-name DEVICE_ID --device-version DEVICE_VERSION --hub-ip 192.168.1.254 --hub-port 4444
 
 ...
 
 # PC_B, 同理
-> appserver 192.168.1.2:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4 --hub-ip 192.168.1.1 --hub-port 4444
+> appserver 192.168.1.2:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4 --hub-ip 192.168.1.254 --hub-port 5555
 
 ...
 ```
 
-3. 远程执行测试
+3. ardriver驱动测试
 
 注意:
-
 - 如果使用 --apk参数，那么 确保 PC A 和 PC B,在该指定的文件路径中，存在这个apk。
 - 如果使用 --package和--activity参数，那么确保，连接到PC的手机，已经装了这个apk
+- aldriver 与 ardriver的区别就在于: ardriver支持 ip和port参数，允许grid模式
 
 ```
-# aldriver 与 ardriver的区别就在于: ardriver支持 ip和port参数，允许grid模式
-> ardriver C:\test_case.yaml --apk C:\ApiDemos-debug.apk --ip 192.168.1.1 --port 4444
+# ardriver本身是个并发驱动测试，但是，每次使用都会开一个进程，并发的过程，就采用多次执行命令吧
+# PC_A执行case1，执行case1的测试验证
+> ardriver C:\test_case1.yaml --apk C:\ApiDemos-debug.apk --ip 192.168.1.254 --port 4444
+
+# PC_B的所有设备，执行case2的测试验证
+> ardriver C:\test_case2.yaml --apk C:\ApiDemos-debug.apk --ip 192.168.1.254 --port 5555
+
 ```
 
 
