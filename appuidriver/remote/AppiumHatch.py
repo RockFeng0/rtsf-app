@@ -167,8 +167,16 @@ class Android(object):
         ''' just execute the command '''
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if readlines:
-            result = [i.decode('utf-8') for i in subp.stdout.readlines()]
+            byte_result = subp.stdout.readlines()
+            try:                        
+                result = [i.decode('utf-8') for i in byte_result]
+            except:
+                result = [i.decode('cp936') for i in byte_result]
         else:
-            result = subp.stdout.read().decode('utf-8')
+            byte_result = subp.stdout.read()
+            try:
+                result = byte_result.decode('cp936')
+            except:
+                result = byte_result.decode('utf-8')
         
         return result
