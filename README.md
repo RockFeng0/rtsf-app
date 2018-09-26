@@ -171,5 +171,244 @@ python setup.py install
 
 ```
 
+## 测试报告及日志
+
+> 执行结束后，测试用例所在路径，就是report生成的路径
 
 
+# 编写测试用例，模板基于rtsf
+
+> 变量引用-> $var    关键字(函数)引用-> ${function}
+
+- 常量的定义， glob_var 和  glob_regx
+- 模板常用的关键字，参见 [rtsf](https://github.com/RockFeng0/rtsf)介绍
+
+## 基本用例
+
+基本用例，是指没有分层的情况下，简单的测试用例
+
+```
+# test_case.yaml
+# yaml测试用例，模型示例:
+- project:
+    name: xxx App
+    module: xxx模块-功能测试
+    
+- case:
+    # id 必填
+    id: ATP-1
+    # desc 必填
+    desc: 测试用例-模板格式的设计-模板（全字段）
+    
+    # responsible 选填
+    responsible: rockfeng0
+    
+    # tester 选填
+    tester: rockfeng0
+    
+    # 定义正则表达式, 定义的字符串不会解析
+    glob_regx:
+        rex_bar_title: 'Views/Controls/(.*)'
+    
+    # 定义变量 
+    glob_var:
+        app_package: io.appium.android.apis
+        app_main_activity: .ApiDemos
+        app_view_webview_activity: .view.WebView1
+        app_view_button_activity: .view.Buttons1
+        app_view_control_activity: .view.Controls1
+        app_view_dragdrop_activity: .view.DragAndDropDemo
+        app_graphic_paint_activity: .graphics.TouchPaint
+        app_animation_activity: .animation.BouncingBalls
+        
+    # pre_command 选填
+    pre_command:
+        - ${StartActivity($app_package, $app_view_control_activity)}
+        - ${DyStrData(var_bar_title, $rex_bar_title)}
+        - ${VerifyVar(var_bar_title, 1. Light Theme)}  
+        
+    # steps 必填
+    steps:      
+    
+        # 在appdriver中，定位元素
+        - appdriver:
+            by: id
+            value: io.appium.android.apis:id/edit
+            index: 0
+            timeout: 10
+            action: ${SendKeys(你好  -  hello)}
+            
+        - appdriver:
+            action: ${TimeSleep(1)}
+        
+        - appdriver:
+            by: -android uiautomator
+            value: text("Checkbox 1")
+            index: 0
+            timeout: 10
+            action: ${Tap()}
+                        
+        - appdriver:
+            action: ${VerifyElemAttr(checked, true)}
+        
+        - appdriver:
+            action: ${Tap()}
+            
+        - appdriver:
+            action: ${VerifyElemAttr(checked, false)}
+        
+        - appdriver:
+            action: ${TimeSleep(1)} 
+        
+        - appdriver:
+            action: ${Swipe(up, 1)}
+                
+        - appdriver:
+            by: id
+            value: android:id/text1            
+            action: ${Tap()} 
+            
+        - appdriver:
+            by: -android uiautomator
+            value: 'text("Earth")'
+            action: ${Tap()}
+                           
+    # post_command 选填
+    post_command:
+        - ${Back()}
+        - ${CloseApp()}
+
+```
+
+## 分层用例
+
+- 分层用例，是指模块功能测试的时候，对测试用例进行分层，最小的单元为api，其次为suite，最后组成用例
+- 其存放路径、编写规则等，详见 [rtsf](https://github.com/RockFeng0/rtsf)相关介绍
+- 示例可以，参见[rtsf-http](https://github.com/RockFeng0/rtsf-http)相关介绍
+
+
+# 封装的关键字(内置函数)
+
+关键字的使用，在前面，有介绍，规则如下
+> 变量引用-> $var    关键字(函数)引用-> ${function}
+
+## App functions --> android设备-测试相关常用操作
+
+```
+LaunchApp()                                     # use current session to launch and active the app        
+StartActivity(app_package,app_activity,timeout) # Only support android.  start an activity and focus to it. default timeout is 10 seconds
+PageSource()                                    # page source for this activity
+Forward()                                       # 类似浏览器的 前进
+Back()                                          # 类似浏览器的 后退
+Shake()                                         # 模拟设备摇晃 
+BackgroundApp(seconds)                          # 应用会被放到后台特定时间,然后应用会重新回到前台 
+OpenNotifications()                             # 打开通知栏
+RemoveApp(app_package)                          # 卸载app
+SwitchToDefaultContext()                        # 切换到默认上下文 
+SwitchToNewContext()                            # 切换到新的上下文
+Reset()                                         # 重置app, 即先closeApp然后在launchAPP
+CloseApp()                                      # only close app . keep the session
+QuitApp()                                       # will close the session
+```
+
+
+##  AppElement methods --> 元素定位相关操作
+
+<table>
+    <tr>
+        <th>AppElement methods</th>
+        <th>参数介绍</th>
+        <th>描述</th>
+    </tr>
+    <tr>
+        <td>GetControl()</td>
+        <td> </td>
+        <td>获取element controls,返回字典，如：{"by":None,"value":None,"index":0,"timeout":10}</td>
+    </tr>
+    <tr>
+        <td rowspan="4">SetControl(by,value,index,timeout)</td>
+        <td>by: 指appium的寻找元素的方式:NativeApp支持("id","xpath","class name",'-android uiautomator')，WebView支持selenium所用方式，默认为None</td>
+        <td rowspan="4">
+                    1.依据app当前context，设置element controls，用于app元素的定位和控制<br/>
+                    2. -android uiautomator是appium使用uiautomator中的UiSelector来定位元素，常用来使用文本定位元素，value值如 text("xxxx")
+        </td>
+    </tr>
+    <tr>
+        <td>value: 与by配对使用，相应by的值</td>
+    </tr>
+    <tr>
+        <td>index: 索引值，默认为0，即第一个， 如果by,value组合找到很多元素，通过索引index指定一个</td>
+    </tr>
+    <tr>
+       <td>timeout: 超时时间，默认10，即10秒，如果by,value组合寻找元素超过10秒，超时报错</td>
+   </tr>    
+</table>
+
+
+## AppContext methods --> 用于上下文管理
+```
+DyAttrData(name,attr)                       # -> 属性-动态存储变量，适用于，保存UI元素属性值。name-变量名称，attr为UI元素的属性名称，**配合SetControl使用**
+DyActivityData(name)                        # -> 使用变量,保存当前app activity name
+DyPackageData(name)                         # -> 使用变量,保存当前app package name
+DyStrData(name, regx, index)                # -> 字符串-动态存储变量，适用于，保存页面html中指定的值。 name-变量名称，regx已编译的正则表达式，index指定索引，默认0
+
+
+GetVar(name)                                # -> 获取指定变量的值
+SetVar(name,value)                          # -> 设置指定变量的值
+```
+
+## AppWait methods --> 用于时间的控制
+```
+TimeSleep(seconds)                   # -> 指定等待时间(秒钟)
+WaitForAppearing()                   # -> 等待元素出现(可能是隐藏，不可见的)，**配合SetControl使用**
+WaitForDisappearing()                # -> 等待元素消失，**配合SetControl使用**
+WaitForVisible()                     # -> 等待元素可见，**配合SetControl使用**
+```
+        
+## AppVerify methods --> 用于验证
+```
+VerifyVar(name, expect_value)                # -> 验证变量值，是期望的expect_value，返回True，否则返回False
+VerifyAppInstalled(app_package)              # -> 验证app package name已经安装
+VerifyCurrentActivity(app_activity)          # -> 验证当前app activity name是期望的app_activity
+VerifyText(text)                             # -> 验证元素text属性值，为期望的text,**配合SetControl使用**
+VerifyElemEnabled()                          # -> 验证元素是enabled，**配合SetControl使用**
+VerifyElemNotEnabled()                       # -> 验证元素是Not Enabled, **配合SetControl使用**
+VerifyElemVisible()                          # -> 验证元素是可见的， **配合SetControl使用**
+VerifyElemNotVisible()                       # -> 验证元素是不可见的，**配合SetControl使用**
+VerifyElemAttr(attr_name,expect_value)       # -> 验证元素属性attr_name的值，包含值expect_value,**配合SetControl使用**
+VerifyElemCounts(num)                        # -> 验证元素数量为num,**配合SetControl使用**
+```
+
+## AppTouchAction methods --> 用于Android触摸操作
+```
+Tap()                        # -> 在指定元素上，轻触点击 1次，**配合SetControl使用**
+LongPress()                  # -> 在指定元素上，长按，**配合SetControl使用**
+Press()                      # -> 在指定元素上，按住不释放，**配合SetControl使用**
+MoveTo()                     # -> 移动到指定元素上，**配合SetControl使用**
+Release()                    # -> 在指定元素上，释放按住的操作，**配合SetControl使用**
+Draw()                       # -> 在当前activity中，画画
+Swipe(direction, times)      # -> 在当前activity中，滑动.direction滑动方向: up, down, left, right; times滑动次数，默认1次
+```
+
+## AppActions methods --> 用于Android常规操作
+```
+Pinch()                      # -> 在指定元素上缩小，**配合SetControl使用**
+Zoom()                       # -> 在指定元素上放大，**配合SetControl使用**
+SendKeys(value)              # -> 在指定元素上,输入文本值，**配合SetControl使用**, 继承自selenium，可用于WebView
+click()                      # -> 在指定元素上，点击左键一次，**配合SetControl使用**, 继承自selenium,可用于WebView
+```
+
+> AppTouchAction和AppActions，封装较少的原因是考虑到Appium继承了selenium,因此有些appium提供的方法中,并不会同时兼容NativeApp和WebviewApp，同时，[rtsf-web](https://github.com/RockFeng0/rtsf-web)项目已经支持了selenium对web ui的测试。
+
+## 自定义，关键字(函数、变量)
+> 在case同级目录中，创建  preference.py, 该文件所定义的 变量、函数，可以被动态加载和引用
+
+执行用例的时候，可以使用 变量引用 或者关键字引用的方法，调用，自定义的函数和变量
+
+```
+# preference.py 示例
+
+test_var = "hello rtsf."
+def test_func():
+    return "nihao rtsf."
+ 

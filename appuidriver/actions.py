@@ -63,6 +63,7 @@ class App(object):
     
     @staticmethod
     def Lock(seconds):
+        ''' Lock the device for a certain period of time. iOS only '''
         App.driver.lock(seconds)
     
     @staticmethod
@@ -179,7 +180,7 @@ class AppElement(object):
         @note: only web-view support:  MobileBy.CSS_SELECTOR, MobileBy.LINK_TEXT, MobileBy.NAME, MobileBy.PARTIAL_LINK_TEXT, MobileBy.TAG_NAME
         @note:  MobileBy.ANDROID_UIAUTOMATOR  
         
-        e。g.  driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')        
+        e.g.  driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')        
 UiSelector的基本方法
         文本方面的方法：
 　　1.text(String text) 文本
@@ -335,7 +336,7 @@ class AppVerify(AppElement):
     
     @classmethod
     def VerifyText(cls, text):
-        # 当前页面的title
+        # 元素text值，为text
         try:
             result = cls._element().text == text
         except:
