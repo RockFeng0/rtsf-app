@@ -19,17 +19,12 @@
 
 > 如果你安装了  android SDK，并设置了 ANDROID_HOME, 确保 adb 和 aapt命令可以被调用
 
-## 安装git 
-
-在安装rtsf-app的时候，一些依赖需要安装，但是这些依赖并未放到pip中，所以临时使用了git安装的方案，安装一下就好。[下载git](https://git-scm.com/downloads/)
-
 ## 下载selenium-server-standalone.jar
 
 > 参见[rtsf-web](https://github.com/RockFeng0/rtsf-web)项目，环境准备栏，给出的下载链接
 
 ## 安装rtsf-app
-python setup.py install
- 
+pip install rtsf-app 
 
 # 命令介绍
 
