@@ -4,10 +4,12 @@
     module: xxx模块-功能测试
     
 - case:
-    # id 必填
+    # id desc 选填，非约定字段 
     id: ATP-1
-    # desc 必填
     desc: 测试用例-模板格式的设计-模板（全字段）
+    
+    # name 必填，需确保唯一性
+    name: android_app_ui_auto_test_demo_1
     
     # responsible 选填
     responsible: rockfeng0
@@ -90,6 +92,7 @@
 - case:
     id: ATP-2    
     desc: 画板-画画
+    name: android_app_ui_auto_test_demo_2
     responsible: case_tester2
     tester: case_tester2     
     pre_command:
@@ -103,6 +106,7 @@
 - case:
     id: ATP-3  
     desc: 拖拽UI
+    name: android_app_ui_auto_test_demo_3
     pre_command:
         - ${StartActivity($app_package, $app_view_dragdrop_activity)}        
     steps:

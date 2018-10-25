@@ -7,4 +7,5 @@ encoding//appuidriver/remote/AppiumJs.py=utf-8
 encoding//tests/test_AppiumHatch.py=utf-8
 encoding//tests/test_AppiumJs.py=utf-8
 encoding//tests/test_actions.py=utf-8
+encoding//tests/test_driver.py=utf-8
 encoding/setup.py=utf-8

@@ -51,14 +51,17 @@ class TestDriver(unittest.TestCase):
     '''
     @classmethod
     def setUpClass(cls):
+        __tool_path = r'D:\auto\buffer\test\test_rtsf_web'
+        
         cls.case_file = r'data\test_case.yaml'
-        cls.jar_path =  r'C:\d_disk\auto\buffer\test\tools\seleniumjar\selenium-server-standalone-3.14.0.jar'
+        cls.jar_path =  os.path.join(__tool_path, "seleniumjar", "selenium-server-standalone-3.14.0.jar")
         cls.java_path = "java"
         
-        platform_tools = r'C:\d_disk\auto\buffer\test\tools\android\platform-tools'  
+        platform_tools = os.path.join(__tool_path, "android", "platform-tools")
         cls._adb_exe_path = os.path.join(platform_tools, "adb.exe")  
         cls._aapt_exe_path = os.path.join(platform_tools, "aapt.exe")
-        cls._apk_abs_path = r'C:\d_disk\auto\buffer\test\tools\android\ApiDemos-debug.apk'
+        
+        cls._apk_abs_path = os.path.join(__tool_path, "android", "ApiDemos-debug.apk")
         cls._app_package = 'io.appium.android.apis'
         cls._app_activity = '.ApiDemos'
 
