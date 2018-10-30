@@ -1,0 +1,22 @@
+# yaml测试用例，模型示例:
+- project:
+    name: xxx App
+    module: xxx模块-数据驱动
+    data:
+      - csv: devices.csv
+            
+- case:    
+    name: android_app_ui_auto_test_demo_$data
+    
+    glob_var:
+        app_package: io.appium.android.apis
+        app_graphic_paint_activity: .graphics.TouchPaint
+            
+    pre_command:
+        - ${StartActivity($app_package, $app_graphic_paint_activity)}        
+    steps:
+        - appdriver:
+            action: ${Draw()}
+    post_command:
+        - ${CloseApp()}
+      

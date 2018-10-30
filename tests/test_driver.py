@@ -51,9 +51,12 @@ class TestDriver(unittest.TestCase):
     '''
     @classmethod
     def setUpClass(cls):
-        __tool_path = r'D:\auto\buffer\test\test_rtsf_web'
+        #__tool_path = r'D:\auto\buffer\test\test_rtsf_web'
+        __tool_path = r'C:\d_disk\auto\buffer\test\tools'        
         
         cls.case_file = r'data\test_case.yaml'
+        cls.data_driver_case = r'data\data_driver.yaml'
+        
         cls.jar_path =  os.path.join(__tool_path, "seleniumjar", "selenium-server-standalone-3.14.0.jar")
         cls.java_path = "java"
         
@@ -82,7 +85,22 @@ class TestDriver(unittest.TestCase):
         self.assertIsInstance(html_report, (list, tuple))
         
         server.stop_server()
+    
+    def test_LocalDriver_with_datadriver(self):
+        LocalDriver._adb_exe_path  = self._adb_exe_path
+        LocalDriver._aapt_exe_path = self._aapt_exe_path
+        LocalDriver._apk_abs_path  = self._apk_abs_path
+        LocalDriver._app_package   = self._app_package
+        LocalDriver._app_activity  = self._app_activity
         
+        server = AppiumJs(port = 4723).bind_device(device_id = "127.0.0.1:6555", platform_version = "4.4.4")
+        server.start_server()
+        
+        runner = TestRunner(runner = LocalDriver).run(self.data_driver_case)
+        html_report = runner.gen_html_report()
+        print(html_report)
+        self.assertIsInstance(html_report, (list, tuple))
+            
     def test_RemoteDriver(self):
         RemoteDriver._aapt_exe_path = self._aapt_exe_path
         RemoteDriver._apk_abs_path  = self._apk_abs_path
@@ -108,7 +126,7 @@ if __name__ == "__main__":
 #     logger.setup_logger("debug")
 #     unittest.main()
     suite = unittest.TestSuite()
-    suite.addTest(TestDriver("test_LocalDriver"))
+    suite.addTest(TestDriver("test_LocalDriver_with_datadriver"))
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)    
     
