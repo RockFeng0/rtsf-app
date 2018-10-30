@@ -12,12 +12,16 @@
 
 > appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U DEVICE_ID
 
+![appium-cmd.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/appium-cmd.png)
+
 ## 设置ANDROID_HOME环境变量
 1. [下载simple_android_home](https://github.com/RockFeng0/rtsf-app/releases/tag/v1.0.39)
 2. 解压文件android_home.zip，新增环境变量 ANDROID_HOME，为解压后的根目录的路径
 3. 在环境变量path中，追加 %ANDROID_HOME%\platform-tools
 
 > 如果你安装了  android SDK，并设置了 ANDROID_HOME, 确保 adb 和 aapt命令可以被调用
+
+![android-tools.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/android-tools.png)
 
 ## 下载selenium-server-standalone.jar
 
@@ -36,6 +40,8 @@ pip install rtsf-app
 > ainfo
 {'127.0.0.1:6555': {'ip': None, 'model': 'SAMSUNG-SM-N900A', 'cpu': 'x86', 'pad_version': 'hlteatt-userdebug 4.4.4 tt eng.jenkins.20171226.140228 release-keys', 'android_version': '4.4.4', 'android_api_version': '19', 'linux_version': 'Linux version 3.10.0+ (ttvm@TianTian-Dev) (gcc version 4.6 20120106 (prerelease) (GCC) ) #13 SMP PREEMPT Mon Dec 18 11:26:12 CST 2017'}}
 ```
+
+![ainfo-cmd.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/ainfo-cmd.png)
 
 2. 查看apk信息，其中主要关注，appPackage和appActivity 
 
@@ -85,6 +91,8 @@ pip install rtsf-app
 
 > ctrl + c 结束端口占用
 
+![scene-1.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/scene-1.png)
+
 ## 场景二 远程控制测试-Selenium Grid Mode
 
 **测试背景及分析**
@@ -102,6 +110,7 @@ pip install rtsf-app
 多台PC,连接多台设备,并行测试case场景，步骤如下
 
 **1.测试场景假设**
+
 ```
  apk(待测试的apk): C:\ApiDemos-debug.apk
  case1(自动化测试用例): C:\test_case1.yaml
@@ -121,6 +130,8 @@ pip install rtsf-app
 注意: adb.exe最多支持每台pc链接20台设备
 并行测试: PC_A连接的所有机器，测试case1;PC_B连接的所有机器,测试case2
 ```
+
+![grid-hub.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/grid-hub.png)
 
 **2.开启selenium grid hub**
 
