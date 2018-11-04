@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 encoding//appuidriver/__about__.py=utf-8
 encoding//appuidriver/actions.py=utf-8
+encoding//appuidriver/cli.py=utf-8
 encoding//appuidriver/driver.py=utf-8
 encoding//appuidriver/remote/AppiumHatch.py=utf-8
 encoding//appuidriver/remote/AppiumJs.py=utf-8
