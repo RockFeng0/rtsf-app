@@ -108,7 +108,8 @@ appserver命令参数
 - 手机已装app，指定测试app的package名字:          --package PACKAGE
 - 手机已装app，指定测试app的activity名字:         --activity ACTIVITY
 
-aldriver命令参数
+aldriver命令参数:
+
 ![aldriver-h.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/aldriver-h.png)
 
 ## ardriver
@@ -119,12 +120,13 @@ aldriver命令参数
 - 在使用grid模式的时候， 如果使用 --apk参数，那么 确保该grid hub下的node手机,在该指定的文件路径中，存在这个apk。
 - 在使用grid模式的时候，如果使用 --package和--activity参数，那么确保，连接到hub的node的手机，已经装了这个apk
 
-ardriver命令参数
+ardriver命令参数:
+
 ![ardriver-h.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/ardriver-h.png)
 
-# rtsf-web的约定
+# rtsf-app的约定
 
-依据rtsf的yaml约定模板，我们在steps中，为rtsf-http约定了一个规则，以便识别为Web UI自动化测试， 如下
+依据rtsf的yaml约定模板，我们在steps中，为rtsf-app约定了一个规则，以便识别为Android UI自动化测试， 如下
 
 ```
 steps:
