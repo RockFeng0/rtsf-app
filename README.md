@@ -146,8 +146,8 @@ WebView的话，支持selenium所用方式
 
 # rtsf-app常用的yaml函数
 
-.
 <!-- 注释， 不建议 使用 SetControl定位元素
+
 ###  AppElement methods --> 元素定位相关操作
 
 <table>
@@ -179,7 +179,9 @@ WebView的话，支持selenium所用方式
        <td>timeout: 超时时间，默认10，即10秒，如果by,value组合寻找元素超过10秒，超时报错</td>
    </tr>    
 </table>
+
 -->
+
 
 ## App functions --> android设备-测试相关常用操作
 
@@ -254,7 +256,6 @@ click()                      # -> 在指定元素上，点击左键一次，**�
 ```
 
 > AppTouchAction和AppActions，封装较少的原因是考虑到Appium继承了selenium,因此有些appium提供的方法中,并不会同时兼容NativeApp和WebviewApp，同时，[rtsf-web](https://github.com/RockFeng0/rtsf-web)项目已经支持了selenium对web ui的测试。
-
 
 # 自定义，yaml函数和变量
 
