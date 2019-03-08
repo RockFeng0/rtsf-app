@@ -148,7 +148,7 @@ WebView的话，支持selenium所用方式
 
 <!-- 注释， 不建议 使用 SetControl定位元素
 
-###  AppElement methods --> 元素定位相关操作
+###  AppElement methods -- 元素定位相关操作
 
 <table>
     <tr>
