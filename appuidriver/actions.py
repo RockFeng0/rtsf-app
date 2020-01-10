@@ -18,15 +18,14 @@ UI and Web Http automation frame for python.
 
 '''
 
-import time,re
-
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
 from appium.webdriver.common.mobileby import MobileBy
 
-from selenium.webdriver.support.ui import WebDriverWait
+from webuidriver.actions import Web, WebActions, WebContext, WebElement, WebVerify, WebWait
 
-class App(object):
+
+class App(Web):
     driver = None    
     
     @staticmethod
@@ -42,20 +41,7 @@ class App(object):
         '''
         App.driver.start_activity(app_package,app_activity)
         return App.driver.wait_activity(app_activity,timeout)
-    
-    @staticmethod
-    def PageSource():
-        ''' page source for this activity '''
-        return App.driver.page_source
-    
-    @staticmethod
-    def Forward():
-        App.driver.forward()
-       
-    @staticmethod
-    def Back():
-        App.driver.back()
-    
+                   
     @staticmethod
     def Shake():
         ''' 模拟设备摇晃 '''
@@ -81,25 +67,7 @@ class App(object):
         ''' 卸载app '''
         App.driver.remove_app(app_package)
         
-    @staticmethod
-    def SwitchToDefaultContext():
-        ''' 切换到默认上下文 '''
-        try:
-            App.driver.switch_to.context(App.driver.contexts[0])
-        except:
-            return False
-        
-    @staticmethod
-    def SwitchToNewContext():
-        ''' 切换到新的上下文 '''
-        try:
-            WebDriverWait(App.driver, 10).until(lambda driver: len(driver.contexts) >= 2)
-            new_context = App.driver.contexts[-1]
-            App.driver.switch_to.context(new_context)       
-        except:            
-            print("Waring: Timeout at 10 seconds. New context Not Found.")
-            return False
-        
+            
     @staticmethod
     def Reset():
         '''重置app, 即先closeApp然后在launchAPP '''
@@ -120,67 +88,15 @@ class App(object):
         finally:
             App.driver = None  
         
-class AppElement(object):
-    
-    __control = {
-        "by":None,
-        "value":None, 
-        "index":0,
-        "timeout":10,
-        } 
-                
-    @classmethod
-    def SetControl(cls,**kwargs):
-        cls.__control.update(kwargs)
-    
-    @classmethod
-    def GetControl(cls):
-        return cls.__control
+class AppElement(WebElement):
         
     @classmethod
-    def _element(cls):
-        '''   find the element with controls '''
-        if not cls.__is_selector():
-            raise Exception("Invalid selector[%s]." %cls.__control["by"])
-        
-        driver = App.driver
-        try:            
-            elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
-        except:                        
-            raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
-        
-        if len(elements) < cls.__control["index"] + 1:                    
-            raise Exception("Element [%s]: Element Index Issue! There are [%s] Elements! Index=[%s]" % (cls.__name__, len(elements), cls.__control["index"]))
-        
-        if len(elements) > 1:              
-            print("Element [%s]: There are [%d] elements, choosed index=%d" %(cls.__name__,len(elements),cls.__control["index"]))
-        
-        elm = elements[cls.__control["index"]]
-        cls.__control["index"] = 0        
-        return elm
-    
-    @classmethod
-    def _elements(cls):
-        '''   find the elements with controls '''
-        if not cls.__is_selector():
-            raise Exception("Invalid selector[%s]." %cls.__control["by"])
-        
-        driver = App.driver
-        try:            
-            elements = WebDriverWait(driver, cls.__control["timeout"]).until(lambda driver: getattr(driver,"find_elements")(cls.__control["by"], cls.__control["value"]))
-        except:            
-            raise Exception("Timeout at %d seconds.Element(%s) not found." %(cls.__control["timeout"],cls.__control["by"]))
-            
-        return elements
-       
-    
-    @classmethod
-    def __is_selector(cls):
+    def _is_selector(cls):
         '''
-        @note: only web-view support:  MobileBy.CSS_SELECTOR, MobileBy.LINK_TEXT, MobileBy.NAME, MobileBy.PARTIAL_LINK_TEXT, MobileBy.TAG_NAME
-        @note:  MobileBy.ANDROID_UIAUTOMATOR  
-        
-        e.g.  driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')        
+        override method
+        @note:  MobileBy.ANDROID_UIAUTOMATOR   e.g.
+            driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')
+            
 UiSelector的基本方法
         文本方面的方法：
 　　1.text(String text) 文本
@@ -219,7 +135,9 @@ UiSelector的基本方法
 　　1.resourceId(String id) 资源ID
 　　2.resourceIdMatches(String regex) 资源ID正则
         '''
-        all_selectors = (MobileBy.ANDROID_UIAUTOMATOR, MobileBy.CLASS_NAME, MobileBy.ID, MobileBy.XPATH, MobileBy.CSS_SELECTOR, MobileBy.LINK_TEXT, MobileBy.NAME, MobileBy.PARTIAL_LINK_TEXT, MobileBy.TAG_NAME)
+        by = ('CLASS_NAME', 'CSS_SELECTOR', 'ID', 'LINK_TEXT', 'NAME', 'PARTIAL_LINK_TEXT', 'TAG_NAME', 'XPATH')
+        mobile_by = ('ACCESSIBILITY_ID', 'ANDROID_UIAUTOMATOR', 'IMAGE', 'IOS_CLASS_CHAIN', 'IOS_PREDICATE', 'IOS_UIAUTOMATION')
+        all_selectors = (getattr(MobileBy, i) for i in by + mobile_by)
                         
         if cls.__control["by"] in all_selectors:
             return True
@@ -228,21 +146,7 @@ UiSelector的基本方法
         return False
                
                 
-class AppContext(AppElement):
-    
-    glob = {}
-            
-    @classmethod
-    def SetVar(cls, name, value):
-        ''' set static value
-        :param name: glob parameter name
-        :param value: parameter value
-        '''
-        cls.glob.update({name:value})
-                
-    @classmethod
-    def GetVar(cls, name):
-        return cls.glob.get(name)     
+class AppContext(WebContext, AppElement):  
     
     @classmethod
     def DyActivityData(cls,name):
@@ -251,70 +155,13 @@ class AppContext(AppElement):
     @classmethod
     def DyPackageData(cls,name):
         cls.glob.update({name:App.driver.current_package})
-    
-    @classmethod
-    def DyStrData(cls, name, regx, index = 0):
-        ''' set dynamic value from the string data of response  
-        @param name: glob parameter name
-        @param regx: re._pattern_type
-            e.g.
-            DyStrData("a",re.compile('123'))
-        '''
-        text = App.PageSource()
-        if not text:
-            return
-        if not isinstance(regx, re._pattern_type):
-            raise Exception("DyStrData need the arg which have compiled the regular expression.")
-            
-        values = regx.findall(text)
-        result = ""
-        if len(values)>index:
-            result = values[index]        
-        cls.glob.update({name:result})
-        
-    @classmethod
-    def DyAttrData(cls,name, attr):
-        ''' node attribute '''
-        attr_value = cls._element().get_attribute(attr)
-        cls.glob.update({name:attr_value})
-                    
-    @classmethod
-    def GetText(cls):
-        ''' node attribute: text '''
-        return cls._element().text
+                
     
          
-class AppWait(AppElement):    
-    
-    @classmethod
-    def TimeSleep(cls, seconds):
-        time.sleep(seconds)
-        
-    @classmethod
-    def WaitForAppearing(cls):        
-        try:
-            result = True if cls._element() else False                            
-        except:
-            result = False
-        return result
-        
-    @classmethod
-    def WaitForDisappearing(cls):        
-        try:
-            result = False if cls._element() else True
-        except:
-            result = True
-        return result
-        
-    @classmethod
-    def WaitForVisible(cls):
-        try:
-            result = cls._element().is_displayed()
-        except:
-            result = False        
-        return result
+class AppWait(WebWait, AppElement):    
+    pass
 
-class AppVerify(AppElement):
+class AppVerify(WebVerify, AppElement):
     
     @classmethod
     def VerifyVar(cls, name, expect_value):
@@ -342,61 +189,7 @@ class AppVerify(AppElement):
         except:
             result = False
         return result
-            
-    @classmethod
-    def VerifyElemEnabled(cls):
-        try:
-            result = cls._element().is_enabled()                          
-        except:
-            result = False
-        return result   
-    
-    @classmethod
-    def VerifyElemNotEnabled(cls):
-        try:
-            result = False if cls._element().is_enabled() else True                          
-        except:
-            result = True
-        return result   
-    
-    @classmethod
-    def VerifyElemVisible(cls):
-        ''' 仅限 Selenium，appium是否实现了类似功能不是太确定, 适用如，混合应用中，潜入了web的情况'''
-        try:
-            result = cls._element().is_displayed()
-        except:
-            result = False
-        return result
-    
-    @classmethod
-    def VerifyElemNotVisible(cls):
-        ''' 仅限 Selenium，appium是否实现了类似功能不是太确定, 适用如，混合应用中，潜入了web的情况'''
-        try:
-            result = False if cls._element().is_displayed() else True
-        except:
-            result = True
-        return result       
-        
-    @classmethod
-    def VerifyElemAttr(cls, attr_name, expect_value):
-        '''
-        @note:  verify content of attribute is expected content
-        @param attr_name: name of element attribute 
-        @param expet_value: expect attribute value
-        '''
-        try:
-            result = expect_value in cls._element().get_attribute(attr_name)
-        except:
-            result = False
-        return result
-    
-    @classmethod
-    def VerifyElemCounts(cls, num):        
-        if len(cls._elements()) == num:
-            return True
-        else:
-            return False
-        
+                    
 class AppTouchAction(AppElement):
     
     @classmethod
@@ -469,10 +262,7 @@ class AppTouchAction(AppElement):
             elif direction.lower() == "down":
                 App.driver.swipe(unit_width *2, unit_height *1, unit_width *2, unit_height *3, 500)
             
-class AppActions(AppElement):
-    ''' selenium methods in appium
-    @note: Waiting for improving
-    '''
+class AppActions(WebActions, AppElement):
     
     @classmethod
     def Pinch(cls):
@@ -488,27 +278,5 @@ class AppActions(AppElement):
         except:
             return False
     
-    ####  inherit selenium's methods
-    @classmethod
-    def SendKeys(cls, value):
-        '''
-        @param value: 文本框，输入的文本
-        '''
-        if value == "":
-            return
-        try:
-            element = cls._element()
-            element.clear()        
-            element.send_keys(value)
-        except:
-            return False
-    
-    @classmethod
-    def Click(cls):
-        ''' 左键 点击 1次   '''
-        try:
-            cls._element().click()
-        except:
-            return False
         
         
