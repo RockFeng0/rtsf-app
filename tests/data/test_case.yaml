@@ -123,6 +123,30 @@
         - appdriver:
             action: ${Release()}
     post_command:
+        - ${CloseApp()}
+        
+- case:
+    id: ATP-4  
+    desc: 切换webview
+    name: android_app_ui_auto_test_demo_4
+    pre_command:
+        - ${StartActivity($app_package, $app_view_webview_activity)}        
+    steps:
+        - appdriver:
+            # 切换到 webview, <html><head></head><body><a href="x">Hello World! - 1</a><iframe name="chromedriver dummy frame" src="about:blank"></iframe></body></html>
+            action: ${SwitchToNewContext()}
+        
+        - appdriver:
+            by: css selector
+            value: a
+            action: ${DyStrData(var_a_link, 'Hello World')}
+        
+        - appdriver:
+            action: $(VerifyVar(var_a_link, 'Hello World'))
+            
+        - appdriver:
+            action: ${SwitchToNewFrame("chromedriver dummy frame")}
+    post_command:
         - ${QuitApp()}
             
             

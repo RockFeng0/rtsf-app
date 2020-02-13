@@ -139,10 +139,10 @@ UiSelector的基本方法
         mobile_by = ('ACCESSIBILITY_ID', 'ANDROID_UIAUTOMATOR', 'IMAGE', 'IOS_CLASS_CHAIN', 'IOS_PREDICATE', 'IOS_UIAUTOMATION')
         all_selectors = (getattr(MobileBy, i) for i in by + mobile_by)
                         
-        if cls.__control["by"] in all_selectors:
+        if cls._control["by"] in all_selectors:
             return True
         
-        print("Warning: selector[%s] should be in %s" %(cls.__control["by"],all_selectors))
+        print("Warning: selector[%s] should be in %s" %(cls._control["by"],all_selectors))
         return False
                
                 
@@ -161,14 +161,7 @@ class AppContext(WebContext, AppElement):
 class AppWait(WebWait, AppElement):    
     pass
 
-class AppVerify(WebVerify, AppElement):
-    
-    @classmethod
-    def VerifyVar(cls, name, expect_value):
-        if AppContext.GetVar(name) == expect_value:
-            return True
-        else:
-            return False
+class AppVerify(WebVerify, AppElement):    
     
     @classmethod
     def VerifyAppInstalled(cls,app_package):
@@ -179,16 +172,7 @@ class AppVerify(WebVerify, AppElement):
         if App.driver.current_activity == app_activity:
             return True
         else:
-            return False    
-    
-    @classmethod
-    def VerifyText(cls, text):
-        # 元素text值，为text
-        try:
-            result = cls._element().text == text
-        except:
-            result = False
-        return result
+            return False      
                     
 class AppTouchAction(AppElement):
     
@@ -278,5 +262,26 @@ class AppActions(WebActions, AppElement):
         except:
             return False
     
-        
+    ####  inherit selenium's methods
+    @classmethod
+    def SendKeys(cls, value):
+        '''
+        @param value: 文本框，输入的文本
+        '''
+        if value == "":
+            return
+        try:
+            element = cls._element()
+            element.clear()        
+            element.send_keys(value)
+        except:
+            return False
+    
+    @classmethod
+    def Click(cls):
+        ''' 左键 点击 1次   '''
+        try:
+            cls._element().click()
+        except:
+            return False
         

@@ -36,7 +36,7 @@ class _Driver(Runner):
         tracer = self.tracers[fn]
         
         _Actions = ModuleUtils.get_imported_module("appuidriver.actions")
-        _Actions.App.driver = fn_driver
+        _Actions.App.driver = _Actions.Web.driver = fn_driver
                             
         functions = {}
         app_functions = ModuleUtils.get_callable_class_method_names(_Actions.App)
