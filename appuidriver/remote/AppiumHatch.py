@@ -54,8 +54,8 @@ class Android(object):
             'appPackage': None,
             'appWaitPackage': None,
             'appActivity': None,
-            'unicodeKeyboard' : True , #如果Unicodekeyboard为true，那么在开始运行脚本的时候，会帮你安装appium自带的输入法，这个输入法是没有UI的
-            'resetKeyboard' : True, # 只有当你的用例是正常执行完毕，没被外界打断的情况下，而且resetkeyboard也为true的情况下，appium会帮你复原输入法
+            'unicodeKeyboard' : True , #支持中文输入; 如果Unicodekeyboard为true，那么在开始运行脚本的时候，会帮你安装appium自带的输入法，这个输入法是没有UI的
+            'resetKeyboard' : True, #支持中文输入,两条都必须配置; 只有当你的用例是正常执行完毕，没被外界打断的情况下，而且resetkeyboard也为true的情况下，appium会帮你复原输入法
             'newCommandTimeout': 120000, # appium命令 --command-timeout 无效，使用cap中的 newCommandTimeout替代,单位 秒
         }
         
