@@ -77,6 +77,10 @@ def appium_main_run():
         '--hub-port', type = int, default = 4444,
         help="hub port in grid mode. register current appium to hub. default: 4444")
     
+    parser.add_argument(
+        '--chromedriver-executable',
+        help="ChromeDriver executable full path for webview. See https://github.com/appium/appium/blob/master/docs/en/writing-running-appium/web/chromedriver.md for more detail")
+    
     color_print("appuidriver {}".format(__version__), "GREEN")
     
     args = parser.parse_args()    
@@ -84,6 +88,9 @@ def appium_main_run():
         return "command parameter error."
     ip, port = args.address.split(":",1)
     server = AppiumJs(port = int(port))
+    
+    if args.chromedriver_executable:
+        server.appium_cmd.extend(["--chromedriver-executable", args.chromedriver_executable])    
     
     if args.device_name:
         server.bind_device(device_id = args.device_name, platform_version = args.device_version)
