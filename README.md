@@ -14,8 +14,8 @@
 
 ## window安装 appium.js
 1. [下载安装node.js](https://nodejs.org/en)
-2. 执行命令，安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
-3. 执行命令，安装appium: cnpm install appium -g
+2. 管理员权限，执行命令，安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
+3. 管理员权限，执行命令，安装appium: cnpm install appium -g
 4. 安装完成后，验证appium: appium.cmd --command-timeout 120000 -p 4723 -U DEVICE_ID
 
 > appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U DEVICE_ID
