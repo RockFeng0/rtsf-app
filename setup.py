@@ -62,6 +62,7 @@ install_requires = [
     "requests",
     "rtsf",
     "rtsf-web",
+    "adbutils"
 ]
 
 # dependency_links=[
