@@ -36,18 +36,36 @@ class _Capabilities:
         :param app_activity: appActivity
         """
         self._capabilities = {
-            'platformName': 'Android',
-            'platformVersion': None,
-            'deviceName': None,
-            # 'app': None,
+            'platformName': 'Android',  # The type of platform hosting the app or browser
+            'appium:automationName': 'UiAutomator2',  # The name of the Appium driver to use
+
+            'browserName': None,  # 浏览器名称，如果是应用，则空值
+            'appium:app': None,  # 安装包的绝对路径，如果指定了appActivity和appWaitPackage，Android则不需要此参数。与browserName不兼容
+            'appium:deviceName': None,  # 手机型号类型
+            'appium:platformVersion': None,  # 手机操作系统版本
+            'appium:newCommandTimeout': 120000, # 等待一条命令超时时间单位为秒
+            'appium:noReset': False,  # 在当前session下不会重置应用状态，默认False
+            'appium:fullReset': False,  # 重置应用(会删除应用数据，session结束后卸载),默认False
+            'appium:eventTimings': False,  # Appium驱动收集事件计时，默认False
+            'appium:printPageSourceOnFindFailure': False,  # 如果为true，则收集页面源代码，并在查找元素的请求失败时将其打印到Appium日志(默认为false)
+
             'appPackage': None,
             'appActivity': None,
             'appWaitPackage': None,
-
             'unicodeKeyboard': True,  # 支持中文输入; 如果Unicodekeyboard为true，那么在开始运行脚本的时候，会帮你安装appium自带的输入法，这个输入法是没有UI的
             'resetKeyboard': True,  # 支持中文输入,两条都必须配置; 只有当你的用例是正常执行完毕，没被外界打断的情况下，而且resetkeyboard也为true的情况下，appium会帮你复原输入法
-            'newCommandTimeout': 120000,  # appium命令 --command-timeout 无效，使用cap中的 newCommandTimeout替代,单位 秒
+
         }
+
+
+class _AndroidCapabilities(_Capabilities):
+    def __init__(self):
+        """
+        :param app_package: appPackage
+        :param app_activity: appActivity
+        """
+        pass
+
 
     def from_apk(self, apk_abs_path):
         """ generate capabilities from android apk
