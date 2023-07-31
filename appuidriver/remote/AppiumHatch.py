@@ -1,13 +1,10 @@
 #! python3
 # -*- encoding: utf-8 -*-
 
-import os
 import re
 import requests
-import subprocess
 from rtsf.p_common import IntelligentWaitUtils
 from appium import webdriver
-
 
 
 class Android(object):
@@ -55,21 +52,3 @@ class Android(object):
         firefox_profile = capabilities.pop("firefox_profile", None)
         return webdriver.Remote(command_executor=executor, desired_capabilities=capabilities, browser_profile=firefox_profile)
 
-    @classmethod
-    def __command(cls, cmd, readlines=True):
-        """ just execute the command """
-        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if readlines:
-            byte_result = subp.stdout.readlines()
-            try:
-                result = [i.decode('utf-8') for i in byte_result]
-            except:
-                result = [i.decode('cp936') for i in byte_result]
-        else:
-            byte_result = subp.stdout.read()
-            try:
-                result = byte_result.decode('cp936')
-            except:
-                result = byte_result.decode('utf-8')
-
-        return result

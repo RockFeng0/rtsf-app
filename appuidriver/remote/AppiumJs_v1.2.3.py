@@ -13,26 +13,16 @@ from selenium.webdriver import DesiredCapabilities
 
 
 class AppiumJs:
-    """  安装 appium命令行
-        1. 下载安装node.js, 默认安装后，设置了环境变量
-        2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
-        3. 安装appium: cnpm install appium -g
-        4. 启动appium: appium.cmd --command-timeout 120000 -p 4723
-    """
 
     def __init__(self, port, loglevel="info:info"):
         """
-
-        :param port: appium server listen port(通过该端口 , appium client使用 Remote连接，进行远程控制)
-        :param loglevel: appium的日志级别
+        @param port:  appium server listen port, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
+        @param loglevel: appium的日志级别
         """
         self._cap = DesiredCapabilities.ANDROID.copy()
         self.__port = port
-        self.appium_cmd = ["appium",
-                           "--keep-alive-timeout", str(port),
-                           "--callback-port", str(port + 1),
-                           "--log-level", loglevel,
-                           ]
+        self.__parse_npm_command()
+        self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
 
     def node(self, ip, hub_address=("localhost", 4444)):
         """ appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset --nodeconfig c:\test\nodeconfig.json
@@ -117,3 +107,34 @@ class AppiumJs:
                 return False
         except:
             return False
+
+    def __parse_npm_command(self):
+        """ parse npm command to get `node` and `appium` absolute path.
+        @note: node-npm just like python-pip
+        @note: 安装 appium命令行
+            1. 下载安装node.js, 默认安装后，设置了环境变量
+            2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
+            3. 安装appium: cnpm install appium -g
+            4. 启动appium: appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
+            5。 appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
+        """
+
+        regx_prefix = re.compile('prefix = "(.*)"')
+        with os.popen('npm config list') as f:
+            npm_config = f.read()
+
+        if npm_config == []:
+            raise KeyError("Invalid command: `npm config list`. node.js should be installed before use npm command.")
+
+        # e.g. prefix = "C:\\Users\\RockFeng\\AppData\\Roaming\\npm"
+        npm_prefix_path = regx_prefix.findall(npm_config)[0]
+
+        regx_list_appium = re.compile('`-- appium@.*\n\n')
+        with os.popen('npm list appium --depth=0 --global') as f:
+            npm_list_appium = f.read()
+
+        if regx_list_appium.findall(npm_list_appium) == []:
+            raise NotFoundError('Not foud js module: `appium`. Use command to install appium: cnpm install appium -g')
+
+        self.appium_js_full_path = os.path.join(npm_prefix_path, 'node_modules','appium', 'build', 'lib', 'main.js')
+

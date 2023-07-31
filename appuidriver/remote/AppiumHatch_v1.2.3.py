@@ -6,10 +6,7 @@ import re
 import requests
 import subprocess
 from rtsf.p_common import IntelligentWaitUtils
-from appuidriver.remote.utils import APKReaderInfo
 from appium import webdriver
-from adbutils import adb
-
 
 
 class IOS(object):
