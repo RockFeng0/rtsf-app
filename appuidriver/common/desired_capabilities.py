@@ -4,6 +4,7 @@
 import os
 import json
 import zipfile
+from selenium.webdriver import DesiredCapabilities
 from adbutils._utils import APKReader
 from apkutils2.manifest import Manifest
 from apkutils2.axml.axmlparser import AXML
@@ -92,19 +93,19 @@ class _AndroidCapabilities(_Capabilities):
     def pkg(self, package, activity):
         """
         from adbutils import adb
-        d = adb.device()
-        app_info = d.app_current()
-        print(app_info.package)
-        print(app_info.activity)
+        print(adb.device().app_current())
         """
-        self.capabilities["appium:ppPackage"] = package
+        self.capabilities["appium:appPackage"] = package
         self.capabilities["appium:appWaitPackage"] = activity
         self.capabilities["appium:appActivity"] = activity
         return self
 
 
-android_cap = _AndroidCapabilities()
+class MobileDesiredCapabilities(DesiredCapabilities):
+    ANDROID = _AndroidCapabilities()
+    IOS = _IOSCapabilities()
 
 
 if __name__ == "__main__":
-    print(android_cap.pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())
+    android = MobileDesiredCapabilities.ANDROID
+    print(android.pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())

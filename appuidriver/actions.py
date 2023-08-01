@@ -1,8 +1,12 @@
 # -*- encoding: utf-8 -*-
 
+""" appium 2.0 版本后，弃用了 TouchAction 和 MultiAction 方法，因为不符合w3c标准。 建议使用w3c actions
 from appium.webdriver.common.touch_action import TouchAction
 from appium.webdriver.common.multi_action import MultiAction
-from appium.webdriver.common.mobileby import MobileBy
+"""
+import time
+from selenium.webdriver import ActionChains  # w3c actions 建议使用
+from appium.webdriver.common.appiumby import AppiumBy
 
 from webuidriver.actions import Web, WebActions, WebContext, WebElement, WebVerify, WebWait
 
@@ -12,57 +16,57 @@ class App(Web):
 
     @staticmethod
     def LaunchApp():
-        ''' use current session to launch and active the app'''
+        """ use current session to launch and active the app"""
         App.driver.launch_app()
 
     @staticmethod
-    def StartActivity(app_package ,app_activity, timeout=10):
-        ''' Only support android.  start an activity and focus to it
+    def StartActivity(app_package, app_activity, timeout=10):
+        """ Only support android.  start an activity and focus to it
         @param app_package: app package name
         @param app_activity: activity name you want to focus to
-        '''
-        App.driver.start_activity(app_package,app_activity)
-        return App.driver.wait_activity(app_activity,timeout)
+        """
+        App.driver.start_activity(app_package, app_activity)
+        return App.driver.wait_activity(app_activity, timeout)
 
     @staticmethod
     def Shake():
-        ''' 模拟设备摇晃 '''
+        """ 模拟设备摇晃 """
         App.driver.shake()
 
     @staticmethod
     def Lock(seconds):
-        ''' Lock the device for a certain period of time. iOS only '''
+        """ Lock the device for a certain period of time. iOS only """
         App.driver.lock(seconds)
 
     @staticmethod
     def BackgroundApp(seconds):
-        '''应用会被放到后台特定时间,然后应用会重新回到前台 '''
+        """应用会被放到后台特定时间,然后应用会重新回到前台 """
         App.driver.background_app(seconds)
 
     @staticmethod
     def OpenNotifications():
-        ''' 打开通知栏 '''
+        """ 打开通知栏 """
         App.driver.open_notifications()
 
     @staticmethod
     def RemoveApp(app_package):
-        ''' 卸载app '''
+        """ 卸载app """
         App.driver.remove_app(app_package)
 
 
     @staticmethod
     def Reset():
-        '''重置app, 即先closeApp然后在launchAPP '''
+        """重置app, 即先closeApp然后在launchAPP """
         App.driver.reset()
 
     @staticmethod
     def CloseApp():
-        ''' only close app . keep the session'''
+        """ only close app . keep the session"""
         App.driver.close_app()
 
     @staticmethod
     def QuitApp():
-        ''' will close the session '''
+        """ will close the session """
         try:
             App.driver.quit()
         except:
@@ -70,13 +74,14 @@ class App(Web):
         finally:
             App.driver = None
 
+
 class AppElement(WebElement):
 
     @classmethod
     def _is_selector(cls):
-        '''
+        """
         override method
-        @note:  MobileBy.ANDROID_UIAUTOMATOR   e.g.
+        @note:  AppiumBy.ANDROID_UIAUTOMATOR   e.g.
             driver.find_elements_by_android_uiautomator('text("Views")');  driver.find_elements_by_android_uiautomator('new UiSelector().text("Views")')
 
 UiSelector的基本方法
@@ -116,10 +121,10 @@ UiSelector的基本方法
 资源ID方面的方法：
 　　1.resourceId(String id) 资源ID
 　　2.resourceIdMatches(String regex) 资源ID正则
-        '''
+        """
         by = ('CLASS_NAME', 'CSS_SELECTOR', 'ID', 'LINK_TEXT', 'NAME', 'PARTIAL_LINK_TEXT', 'TAG_NAME', 'XPATH')
         mobile_by = ('ACCESSIBILITY_ID', 'ANDROID_UIAUTOMATOR', 'IMAGE', 'IOS_CLASS_CHAIN', 'IOS_PREDICATE', 'IOS_UIAUTOMATION')
-        all_selectors = (getattr(MobileBy, i) for i in by + mobile_by)
+        all_selectors = (getattr(AppiumBy, i) for i in by + mobile_by)
 
         if cls._control["by"] in all_selectors:
             return True
@@ -143,6 +148,7 @@ class AppContext(WebContext, AppElement):
 class AppWait(WebWait, AppElement):
     pass
 
+
 class AppVerify(WebVerify, AppElement):
 
     @classmethod
@@ -156,77 +162,104 @@ class AppVerify(WebVerify, AppElement):
         else:
             return False
 
-class AppTouchAction(AppElement):
 
+class AppTouchAction(AppElement):
     @classmethod
     def Tap(cls):
         try:
-            TouchAction(App.driver).tap(cls._element()).perform()
+            ActionChains(App.driver).click(cls._element()).perform()
+            # TouchAction(App.driver).tap(cls._element()).perform()
         except:
             return False
 
     @classmethod
     def LongPress(cls):
         try:
-            TouchAction(App.driver).long_press(cls._element()).perform()
+            ActionChains(App.driver).click_and_hold(cls._element()).perform()
+            time.sleep(1)
+            ActionChains(App.driver).release().perform()
+            # TouchAction(App.driver).long_press(cls._element()).perform()
         except:
             return False
 
     @classmethod
     def Press(cls):
         try:
-            TouchAction(App.driver).press(cls._element()).perform()
+            ActionChains(App.driver).click_and_hold(cls._element()).perform()
+            # TouchAction(App.driver).press(cls._element()).perform()
         except:
             return False
 
     @classmethod
     def MoveTo(cls):
         try:
-            TouchAction(App.driver).move_to(cls._element()).perform()
+            ActionChains(App.driver).move_to_element(cls._element()).perform()
+            # TouchAction(App.driver).move_to(cls._element()).perform()
         except:
             return False
 
     @classmethod
     def Release(cls):
         try:
-            TouchAction(App.driver).release().perform()
+            ActionChains(App.driver).release(cls._element()).perform()
+            # TouchAction(App.driver).release().perform()
         except:
             return False
 
     @classmethod
     def Draw(cls):
-        ''' 模拟多个动作，这里，画了个笑脸   '''
+        """ 模拟多个动作，这里，画了个笑脸   """
         try:
-            action1 = TouchAction(App.driver).press(x=150, y=275).release()
-            action2 = TouchAction(App.driver).press(x=550, y=275).release()
-            action3 = TouchAction(App.driver).press(x=150, y=475).move_to(x=250, y=500).move_to(x=350, y=525).move_to(x=450, y=500).move_to(x=550, y=475).release()
-            m_action = MultiAction(App.driver)
-            m_action.add(action1, action2, action3)
-            m_action.perform()
+            ActionChains(App.driver).move_by_offset(250, 500).\
+                click_and_hold().\
+                move_by_offset(350, 525).\
+                move_by_offset(450, 500).\
+                move_by_offset(550, 475).\
+                release().perform()
+
+            # action1 = TouchAction(App.driver).press(x=150, y=275).release()
+            # action2 = TouchAction(App.driver).press(x=550, y=275).release()
+            # action3 = TouchAction(App.driver).press(x=150, y=475).movmove_to(x=250, y=500).move_to(x=350, y=525).move_to(x=450, y=500).move_to(x=550, y=475).release()
+            # m_action = MultiAction(App.driver)
+            # m_action.add(action1, action2, action3)
+            # m_action.perform()
         except:
             return False
 
     @classmethod
     def Swipe(cls, direction, times = 1):
-        ''' swipe screen
+        """ swipe screen
         @param direction: up, down, left, right
-        '''
+        """
         size = App.driver.get_window_size()
         unit_width = size["width"] / 4
         unit_height = size["height"] / 4
 
         for _ in range(int(times)):
             if direction.lower() == "left":
-                App.driver.swipe(unit_width *3, unit_height *2, unit_width *1, unit_height *2, 500)
+                ActionChains(App.driver).move_by_offset(unit_width * 3, unit_height * 2). \
+                    click_and_hold().move_by_offset(unit_width * 1, unit_height * 2). \
+                    release().perform()
+                # App.driver.swipe(unit_width * 3, unit_height * 2, unit_width * 1, unit_height * 2, 500)
 
             elif direction.lower() == "right":
-                App.driver.swipe(unit_width *1, unit_height *2, unit_width *3, unit_height *2, 500)
+                ActionChains(App.driver).move_by_offset(unit_width *1, unit_height *2). \
+                    click_and_hold().move_by_offset(unit_width *3, unit_height *2). \
+                    release().perform()
+                # App.driver.swipe(unit_width *1, unit_height *2, unit_width *3, unit_height *2, 500)
 
             elif direction.lower() == "up":
-                App.driver.swipe(unit_width *2, unit_height *3, unit_width *2, unit_height *1, 500)
+                ActionChains(App.driver).move_by_offset(unit_width *2, unit_height *3). \
+                    click_and_hold().move_by_offset(unit_width *2, unit_height *1). \
+                    release().perform()
+                # App.driver.swipe(unit_width *2, unit_height *3, unit_width *2, unit_height *1, 500)
 
             elif direction.lower() == "down":
-                App.driver.swipe(unit_width *2, unit_height *1, unit_width *2, unit_height *3, 500)
+                ActionChains(App.driver).move_by_offset(unit_width * 2, unit_height * 1). \
+                    click_and_hold().move_by_offset(unit_width * 2, unit_height * 3). \
+                    release().perform()
+                # App.driver.swipe(unit_width * 2, unit_height * 1, unit_width * 2, unit_height * 3, 500)
+
 
 class AppActions(WebActions, AppElement):
 
@@ -247,9 +280,9 @@ class AppActions(WebActions, AppElement):
     ####  inherit selenium's methods
     @classmethod
     def SendKeys(cls, value):
-        '''
+        """
         @param value: 文本框，输入的文本
-        '''
+        """
         if value == "":
             return
         try:
@@ -261,7 +294,7 @@ class AppActions(WebActions, AppElement):
 
     @classmethod
     def Click(cls):
-        ''' 左键 点击 1次   '''
+        """ 左键 点击 1次   """
         try:
             cls._element().click()
         except:

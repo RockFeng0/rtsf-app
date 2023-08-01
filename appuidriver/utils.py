@@ -62,8 +62,13 @@ class _AndroidDevices(_Devices):
             })
         return self
 
+    @staticmethod
+    def current_activity():
+        return adb.device().app_current().__dict__
 
-android_dev = _AndroidDevices()
+
+android = _AndroidDevices()
 
 if __name__ == "__main__":
-    print(android_dev.info.to_json())
+    print(android.info.to_dict())
+    print(android.current_activity())
