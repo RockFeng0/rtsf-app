@@ -108,4 +108,5 @@ class MobileDesiredCapabilities(DesiredCapabilities):
 
 if __name__ == "__main__":
     android = MobileDesiredCapabilities.ANDROID
+    print(android.to_dict())
     print(android.pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())

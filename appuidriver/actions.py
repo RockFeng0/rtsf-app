@@ -129,19 +129,19 @@ UiSelector的基本方法
         if cls._control["by"] in all_selectors:
             return True
 
-        print("Warning: selector[%s] should be in %s" %(cls._control["by"],all_selectors))
+        print("Warning: selector[%s] should be in %s" % (cls._control["by"], all_selectors))
         return False
 
 
 class AppContext(WebContext, AppElement):
 
     @classmethod
-    def DyActivityData(cls,name):
-        cls.glob.update({name:App.driver.current_activity})
+    def DyActivityData(cls, name):
+        cls.glob.update({name: App.driver.current_activity})
 
     @classmethod
     def DyPackageData(cls,name):
-        cls.glob.update({name:App.driver.current_package})
+        cls.glob.update({name: App.driver.current_package})
 
 
 
@@ -152,7 +152,7 @@ class AppWait(WebWait, AppElement):
 class AppVerify(WebVerify, AppElement):
 
     @classmethod
-    def VerifyAppInstalled(cls,app_package):
+    def VerifyAppInstalled(cls, app_package):
         return App.driver.is_app_installed(app_package)
 
     @classmethod
