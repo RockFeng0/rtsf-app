@@ -1,8 +1,31 @@
 #! python3
 # -*- encoding: utf-8 -*-
 
+import os
 import json
+import zipfile
 from adbutils import adb
+from adbutils._utils import APKReader
+from apkutils2.manifest import Manifest
+from apkutils2.axml.axmlparser import AXML
+
+
+class _APKReaderInfo(APKReader):
+
+    def dump_info(self):
+        zf = zipfile.ZipFile(self._fp)
+        raw_manifest = zf.read("AndroidManifest.xml")
+        axml = AXML(raw_manifest)
+        if not axml.is_valid:
+            print("axml is invalid")
+            return
+        am = Manifest(axml.get_xml())
+        return {
+            "package": am.package_name,
+            "main-activity": am.main_activity,
+            "version-name": am.version_name,
+            "version-code": am.version_code
+        }
 
 
 class _Devices:
@@ -62,9 +85,20 @@ class _AndroidDevices(_Devices):
     def current_activity():
         return adb.device().app_current()
 
+    @staticmethod
+    def parse_apk(apk_abs_path):
+        """ python -m adbutils --parse some.apk """
+        if not os.path.isfile(apk_abs_path):
+            return
+
+        with open(apk_abs_path, 'rb') as fp:
+            ar = _APKReaderInfo(fp)
+            return ar.dump_info()
+
 
 android = _AndroidDevices()
 
 if __name__ == "__main__":
     print(android.detect_info())
     print(android.current_activity())
+    print(android.parse_apk("/buffer/some.apk"))

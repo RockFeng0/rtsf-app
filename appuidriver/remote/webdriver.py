@@ -1,13 +1,12 @@
 #! python3
 # -*- encoding: utf-8 -*-
 
-
-from webuidriver.remote.wait_until import WaitUntil
+from appuidriver.remote.appium_wait_until import AppiumWaitUntil
 from appium.webdriver import Remote
 
 
-class WebDriver(Remote, WaitUntil):
+class WebDriver(Remote, AppiumWaitUntil):
     def __init__(self, *args, **kwargs):
         Remote.__init__(self, *args, **kwargs)
-        WaitUntil.__init__(self)
+        AppiumWaitUntil.__init__(self)
 

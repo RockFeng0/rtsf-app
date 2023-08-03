@@ -3,29 +3,7 @@
 
 import os
 import json
-import zipfile
 from selenium.webdriver import DesiredCapabilities
-from adbutils._utils import APKReader
-from apkutils2.manifest import Manifest
-from apkutils2.axml.axmlparser import AXML
-
-
-class _APKReaderInfo(APKReader):
-
-    def dump_info(self):
-        zf = zipfile.ZipFile(self._fp)
-        raw_manifest = zf.read("AndroidManifest.xml")
-        axml = AXML(raw_manifest)
-        if not axml.is_valid:
-            print("axml is invalid")
-            return
-        am = Manifest(axml.get_xml())
-        return {
-            "package": am.package_name,
-            "main-activity": am.main_activity,
-            "version-name": am.version_name,
-            "version-code": am.version_code
-        }
 
 
 class _Capabilities:
@@ -75,20 +53,9 @@ class _AndroidCapabilities(_Capabilities):
         # 剔除手机端浏览器参数(browserName)，该参数与APP应用参数（app、appPackage、appActivity） 不兼容
         self.capabilities.pop("browserName")
 
-    def with_pkg(self, apk_abs_path):
-        """ python -m adbutils --parse some.apk """
-
-        if not os.path.isfile(apk_abs_path):
-            return {}
-
-        with open(apk_abs_path, 'rb') as fp:
-            ar = _APKReaderInfo(fp)
-            pkg_info = ar.dump_info()
-
-            # capabilities["app"] = apk_abs_path
-            self.capabilities["appium:appPackage"] = pkg_info["package"]
-            self.capabilities["appium:appWaitPackage"] = pkg_info["package"]
-            self.capabilities["appium:appActivity"] = pkg_info["main-activity"]
+    def with_app(self, apk_abs_path):
+        if os.path.isfile(apk_abs_path):
+            self.capabilities["appium: app"] = apk_abs_path
 
         return self
 
