@@ -12,20 +12,26 @@
 """
 
 
-import appuidriver
-from appuidriver.utils import android
-from appuidriver import MobileDesiredCapabilities
+import appuidriver as webdriver
+from appuidriver import Cap, utils
+from appium.webdriver.common.appiumby import AppiumBy
 
 
 appium_server_url = 'http://localhost:4723'
-# print(android.current_activity())
-capabilities = MobileDesiredCapabilities.ANDROID.pkg(
+
+android_info = utils.android.detect_info()
+pkg_info = utils.android.current_activity()
+print("package info:", pkg_info.package, pkg_info.activity)
+
+cap = Cap.android.with_pkg(
     package="com.cmcc.hebao",
     activity="com.cmcc.wallet.mocam.activity.home.WalletHomeActivity"
-).to_dict()
+)
 
+print("capabilities info:", cap.to_json())
 
-driver = appuidriver.Remote(appium_server_url, capabilities)
+driver = webdriver.Remote(appium_server_url, cap.to_dict())
+driver.find_element(AppiumBy.ACCESSIBILITY_ID)
 
 
 

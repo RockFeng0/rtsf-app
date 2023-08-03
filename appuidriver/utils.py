@@ -8,13 +8,10 @@ from adbutils import adb
 class _Devices:
 
     def __init__(self):
-        self.devices = []
+        self._devices = []
 
     def to_json(self):
-        return json.dumps(self.devices)
-
-    def to_dict(self):
-        return self.devices
+        return json.dumps(self._devices)
 
 
 class _IOSDevices(object):
@@ -27,8 +24,7 @@ class _AndroidDevices(_Devices):
     def __init__(self):
         _Devices.__init__(self)
 
-    @property
-    def info(self):
+    def detect_info(self):
         """ parsed commands to get android devices infomation.
         @return: dict of devices infomation. formation is {device_id: device_info}
         """
@@ -50,7 +46,7 @@ class _AndroidDevices(_Devices):
             ver = d.shell("cat /proc/version")
             linux_version = ver.strip()
 
-            self.devices.append({
+            self._devices.append({
                 "serial": device_id,
                 'ip': pad_ip,
                 'model': pad_type,  # 型号
@@ -60,15 +56,15 @@ class _AndroidDevices(_Devices):
                 'android_api_version': android_api_version,
                 'linux_version': linux_version
             })
-        return self
+        return self._devices
 
     @staticmethod
     def current_activity():
-        return adb.device().app_current().__dict__
+        return adb.device().app_current()
 
 
 android = _AndroidDevices()
 
 if __name__ == "__main__":
-    print(android.info.to_dict())
+    print(android.detect_info())
     print(android.current_activity())

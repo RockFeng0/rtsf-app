@@ -36,7 +36,7 @@ class _Capabilities:
             'platformName': 'Android',  # The type of platform hosting the app or browser
             'appium:automationName': 'UiAutomator2',  # The name of the Appium driver to use
 
-            'browserName': None,  # 浏览器名称，如果是应用，则空值
+            'browserName': None,  # 手机端浏览器名称，如果是应用，则空值
             'appium:app': None,  # 安装包的绝对路径，如果指定了appActivity和appWaitPackage，Android则不需要此参数。与browserName不兼容
             'appium:deviceName': None,  # 手机型号类型
             'appium:platformVersion': None,  # 手机操作系统版本
@@ -72,8 +72,10 @@ class _AndroidCapabilities(_Capabilities):
                 'appium:udid': None,  # 绑定的设备ID
             }
         )
+        # 剔除手机端浏览器参数(browserName)，该参数与APP应用参数（app、appPackage、appActivity） 不兼容
+        self.capabilities.pop("browserName")
 
-    def app(self, apk_abs_path):
+    def with_pkg(self, apk_abs_path):
         """ python -m adbutils --parse some.apk """
 
         if not os.path.isfile(apk_abs_path):
@@ -90,7 +92,7 @@ class _AndroidCapabilities(_Capabilities):
 
         return self
 
-    def pkg(self, package, activity):
+    def with_pkg(self, package, activity):
         """
         from adbutils import adb
         print(adb.device().app_current())
@@ -102,11 +104,11 @@ class _AndroidCapabilities(_Capabilities):
 
 
 class MobileDesiredCapabilities(DesiredCapabilities):
-    ANDROID = _AndroidCapabilities()
-    IOS = _IOSCapabilities()
+    android = _AndroidCapabilities()
+    ios = _IOSCapabilities()
 
 
 if __name__ == "__main__":
-    android = MobileDesiredCapabilities.ANDROID
+    android = MobileDesiredCapabilities.android
     print(android.to_dict())
-    print(android.pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())
+    print(android.with_pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())
