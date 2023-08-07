@@ -2,12 +2,17 @@
 # -*- encoding: utf-8 -*-
 
 import os
+import re
 import json
 import zipfile
+import requests
+from bs4 import BeautifulSoup
 from adbutils import adb
 from adbutils._utils import APKReader
 from apkutils2.manifest import Manifest
 from apkutils2.axml.axmlparser import AXML
+
+from rtsf.p_common import IntelligentWaitUtils
 
 
 class _APKReaderInfo(APKReader):
@@ -96,9 +101,90 @@ class _AndroidDevices(_Devices):
             return ar.dump_info()
 
 
+class GridNodes(object):
+
+    def __init__(self, hub_ip="localhost", hub_port=4444):
+        self._host = hub_ip
+        self._port = hub_port
+
+    def list(self):
+        checked = self._check_grid_response()
+        if checked is None:
+            return []
+
+        tag = checked["tag"]
+        response = checked["obj"]
+        if tag == "graphql":
+            # selenium grid 4+
+            remote_hosts = response.json()
+            # [('3aaf8978-9b47-4371-bf67-a70f7c9a981c', '4.11.0 (revision 3df8b70)', 'http://192.168.116.116:5556')]
+            return [
+                (node["id"], node["version"], node["uri"])
+                for node in remote_hosts["data"]["nodesInfo"]["nodes"] if node["status"] == "UP"
+            ]
+        elif tag == "console":
+            # selenium grid < 4
+            cmp_1 = r"id: ([\w/\.:]+)"
+            cmp_2 = r"udversion: ([\w/\\.:]*)"
+            cmp_3 = r"remoteHost: ([\w/\\.:]+)"
+            ll = []
+
+            sp = BeautifulSoup(markup=response.text, features="html.parser")
+            for node in sp.find_all(attrs={"type": "config", "class": "content_detail"}):
+                _text = node.get_text(separator=" ")
+                _id = re.findall(cmp_1, _text) if re.findall(cmp_1, _text) else [""]
+                udversion = re.findall(cmp_2, _text) if re.findall(cmp_2, _text) else [""]
+                _remote_host = re.findall(cmp_3, _text) if re.findall(cmp_3, _text) else [""]
+                ll.extend(tuple(zip(_id, udversion, map(lambda x: x + "/wd/hub", _remote_host))))
+            # if response.status_code == 200:
+            #     remote_hosts = re.findall("udid: ([\w/\.:]+).*udversion: ([\\w/\\.:]*).*remoteHost: ([\w/\.:]+)", response.text)
+            # return [(udid, udversion, host + "/wd/hub") for udid, udversion, host in remote_hosts]
+            # [('http://192.168.116.116:5556', '', 'http://192.168.116.116:5556/wd/hub')]
+            return ll
+        else:
+            return []
+
+    def _check_grid_response(self):
+        if not IntelligentWaitUtils.wait_for_connection(self._host, self._port, timeout=5):
+            print("grid hub not connected.")
+            return
+
+        # selenium grid 4+
+        url_graphql = "http://{}:{}/graphql".format(self._host, self._port)
+        # selenium grid < 4
+        url_console = "http://{}:{}/grid/console".format(self._host, self._port)
+
+        payload = json.dumps({
+            "operationName": "GetNodes",
+            "variables": {},
+            "query": "query GetNodes {\n  nodesInfo {\n    nodes {\n      id\n      uri\n      status\n      maxSession\n      slotCount\n      stereotypes\n      version\n      sessionCount\n      osInfo {\n        version\n        name\n        arch\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}"
+        })
+
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url_graphql, headers=headers, data=payload)
+        if response.status_code == 200:
+            return {
+                "tag": "graphql",
+                "obj": response
+            }
+
+        response = requests.get(url_console)
+        if response.status_code == 200:
+            return {
+                "tag": "console",
+                "obj": response
+            }
+        return
+
+
 android = _AndroidDevices()
 
 if __name__ == "__main__":
+    # nodes = GridNodes()
+    # print(nodes.list())
     print(android.detect_info())
     print(android.current_activity())
     print(android.parse_apk("/buffer/some.apk"))

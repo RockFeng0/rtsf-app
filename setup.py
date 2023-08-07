@@ -63,7 +63,8 @@ install_requires = [
     "rtsf",
     "rtsf-web>=1.3.6",
     "adbutils",
-    "selenium>=4.10.0"
+    "selenium>=4.10.0",
+    "beautifulsoup4"
 ]
 
 # dependency_links=[
