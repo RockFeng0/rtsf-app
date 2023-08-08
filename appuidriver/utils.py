@@ -104,6 +104,7 @@ class _AndroidDevices(_Devices):
 class GridNodes(object):
 
     def __init__(self, hub_ip="localhost", hub_port=4444):
+        """ 不区分Grid版本, 给hub ip 和 端口，探测 node节点"""
         self._host = hub_ip
         self._port = hub_port
 

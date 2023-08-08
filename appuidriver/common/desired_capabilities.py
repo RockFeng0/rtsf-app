@@ -55,7 +55,7 @@ class _AndroidCapabilities(_Capabilities):
 
     def with_app(self, apk_abs_path):
         if os.path.isfile(apk_abs_path):
-            self.capabilities["appium: app"] = apk_abs_path
+            self.capabilities["appium:app"] = apk_abs_path
 
         return self
 
@@ -71,11 +71,13 @@ class _AndroidCapabilities(_Capabilities):
 
 
 class MobileDesiredCapabilities(DesiredCapabilities):
-    android = _AndroidCapabilities()
-    ios = _IOSCapabilities()
+
+    def __init__(self):
+        self.android = _AndroidCapabilities()
+        self.ios = _IOSCapabilities()
 
 
 if __name__ == "__main__":
-    android = MobileDesiredCapabilities.android
+    android = MobileDesiredCapabilities().android
     print(android.to_dict())
     print(android.with_pkg("uk.co.aifactory.chessfree", "uk.co.aifactory.chessfree.ChessFreeActivity").to_json())

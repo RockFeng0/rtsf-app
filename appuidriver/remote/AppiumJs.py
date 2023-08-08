@@ -10,6 +10,7 @@ import requests
 from rtsf.p_common import IntelligentWaitUtils
 from rtsf.p_exception import NotFoundError
 from selenium.webdriver import DesiredCapabilities
+from appuidriver import Cap
 
 
 class AppiumJs:
@@ -19,7 +20,8 @@ class AppiumJs:
         @param port:  appium server listen port, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
         @param loglevel: appium的日志级别
         """
-        self._cap = DesiredCapabilities.ANDROID.copy()
+
+        self._cap = Cap().android.to_dict()
         self.__port = port
         self.__parse_npm_command()
         self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
@@ -116,25 +118,31 @@ class AppiumJs:
             2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
             3. 安装appium: cnpm install appium -g
             4. 启动appium: appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
-            5。 appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
+            5. appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
         """
 
-        regx_prefix = re.compile('prefix = "(.*)"')
+        regx_prefix = re.compile('.*prefix = (.*)')
         with os.popen('npm config list') as f:
-            npm_config = f.read()
+            npm_config = f.readlines()
 
-        if npm_config == []:
+        if not npm_config:
             raise KeyError("Invalid command: `npm config list`. node.js should be installed before use npm command.")
 
-        # e.g. prefix = "C:\\Users\\RockFeng\\AppData\\Roaming\\npm"
-        npm_prefix_path = regx_prefix.findall(npm_config)[0]
+        # e.g. prefix = "C:\\Users\\RockFeng\\AppData\\Roaming\\npm"  npm本地安装路径的前缀
+        for line in npm_config:
+            found = regx_prefix.findall(line)
+            if found:
+                npm_prefix_path = found[0]
+                break
 
+        # npm list appium --depth=0 --global  查看是否安装 appium
         regx_list_appium = re.compile('`-- appium@.*\n\n')
         with os.popen('npm list appium --depth=0 --global') as f:
-            npm_list_appium = f.read()
+            npm_list_appium = f.readlines()
 
-        if regx_list_appium.findall(npm_list_appium) == []:
+        if not regx_list_appium.findall(npm_list_appium):
             raise NotFoundError('Not foud js module: `appium`. Use command to install appium: cnpm install appium -g')
 
-        self.appium_js_full_path = os.path.join(npm_prefix_path, 'node_modules','appium', 'build', 'lib', 'main.js')
+        # todo appium2.0后，管理driver和plugin路径不在 node模块库里边，而默认在%userprofile%/.appium
+        self.appium_js_full_path = os.path.join(npm_prefix_path, 'node_modules', 'appium', 'build', 'lib', 'main.js')
 

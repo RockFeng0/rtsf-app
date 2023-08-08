@@ -11,7 +11,7 @@ android_info = utils.android.detect_info()
 pkg_info = utils.android.current_activity()
 print("package info:", pkg_info.package, pkg_info.activity)
 
-cap = Cap.android.with_pkg(
+cap = Cap().android.with_pkg(
     package="com.android.settings",
     activity=".Settings"
 )

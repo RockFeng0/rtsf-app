@@ -17,10 +17,10 @@ class Android(object):
     def gen_capabilities(cls, apk_abs_path=None, app_package=None, app_activity=None, aapt_exe_4path=None):
         """ aapt_exe_4path 参数在 rtsf v1.2.3 之后版本 弃用 """
 
-        if os.path.isfile(apk_abs_path):
-            cap = Cap.android.with_app(apk_abs_path)
+        if apk_abs_path and os.path.isfile(apk_abs_path):
+            cap = Cap().android.with_app(apk_abs_path)
         else:
-            cap = Cap.android.with_pkg(
+            cap = Cap().android.with_pkg(
                 package=app_package,
                 activity=app_activity
             )
@@ -34,11 +34,11 @@ class Android(object):
         return utils.android.detect_info()
 
     @staticmethod
-    def get_executor(server_ip, server_port=4723, base_url=None):
+    def get_executor(server_ip, server_port=4723, base_url=True):
         """appium server 2.x 以上版本没有base_url,  1.x版本  需要base_url /wd/hub
         :param server_ip: hub ip or appium server ip
         :param server_port: hub port or appium server port
-        :param base_url: /wd/hub or None
+        :param base_url: True or False
         :return:
         """
         if base_url:
