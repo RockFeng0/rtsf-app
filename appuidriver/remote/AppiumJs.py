@@ -14,11 +14,13 @@ from appuidriver import Cap
 
 
 class AppiumJs:
-
-    def __init__(self, port, loglevel="info:info"):
+    """
+    仅适用于 grid <4, appium< 2
+    """
+    def __init__(self, port=4723, loglevel="info:info"):
         """
-        @param port:  appium server listen port, 通过该端口 , appium client使用 Remote连接，进行远程控制。 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
-        @param loglevel: appium的日志级别
+        :param port: appium server listen port, 默认4723 如， http://127.0.0.1:4723/wd/hub, http://192.168.0.1:4723/wd/hub
+        :param loglevel: appium的日志级别
         """
 
         self._cap = Cap().android.to_dict()
@@ -27,10 +29,10 @@ class AppiumJs:
         self.appium_cmd = ["node", self.appium_js_full_path, "-p", str(port), "-bp", str(port + 1), "--log-level", loglevel]
 
     def node(self, ip, hub_address=("localhost", 4444)):
-        """ appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset --nodeconfig c:\test\nodeconfig.json
-        @note: java -jar c:\selenium-server-standalone-3.14.0.jar -role hub
-        @param ip:    appium server listen ip, loopback ip not suggest to use in grid mode
-        @param hub_address: hub address which node will connect to
+        """ 命令行 appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset --nodeconfig c:\test\nodeconfig.json
+        :param ip: appium服务端ip, grid模式下，不要使用loopback ip(localhost, 127.0.0.1)
+        :param hub_address: hub address which node will connect to
+        :return:
         """
         if ip in ('localhost', "127.0.0.1"):
             print("Waring: loopback ip not suggest to use in grid mode. remoteHost is loopback address!!!")
@@ -67,10 +69,10 @@ class AppiumJs:
         return self
 
     def bind_device(self, device_id, platform_version=""):
-        """ appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset
-        @param device_id:  连接的设备uuid, appium server通过 uuid保持对已连接到当前机器的设备，进行自动化控制
-        @param platform_version:  android设备的platform_version信息
-        @param timeout: 超时时间， case脚本与appium创建的session，此时间后，超时
+        """ 命令行 appium -p 4723 -bp 4724 --log-level info:info --udid 127.0.0.1:6555 --no-reset
+        :param device_id: 连接的设备uuid, appium server通过 uuid保持对已连接到当前机器的设备，进行自动化控制
+        :param platform_version: android设备的platform_version信息
+        :return:
         """
         self._cap["udid"] = device_id
         self._cap["udversion"] = platform_version
@@ -81,7 +83,7 @@ class AppiumJs:
         """start the appium server."""
         self.__subp = subprocess.Popen(self.appium_cmd)
         # print("\tappium server pid[%s] is running." %self.__subp.pid)
-        IntelligentWaitUtils.wait_for_connection(port = self.__port)
+        IntelligentWaitUtils.wait_for_connection(port=self.__port)
         time.sleep(2)
 
     def stop_server(self):
@@ -117,8 +119,6 @@ class AppiumJs:
             1. 下载安装node.js, 默认安装后，设置了环境变量
             2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
             3. 安装appium: cnpm install appium -g
-            4. 启动appium: appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
-            5. appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
         """
 
         regx_prefix = re.compile('.*prefix = (.*)')
@@ -138,11 +138,17 @@ class AppiumJs:
         # npm list appium --depth=0 --global  查看是否安装 appium
         regx_list_appium = re.compile('`-- appium@.*\n\n')
         with os.popen('npm list appium --depth=0 --global') as f:
-            npm_list_appium = f.readlines()
+            npm_list_appium = f.read()
 
         if not regx_list_appium.findall(npm_list_appium):
             raise NotFoundError('Not foud js module: `appium`. Use command to install appium: cnpm install appium -g')
 
-        # todo appium2.0后，管理driver和plugin路径不在 node模块库里边，而默认在%userprofile%/.appium
+        # appium 1.x:
+        # appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
+        # appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
         self.appium_js_full_path = os.path.join(npm_prefix_path, 'node_modules', 'appium', 'build', 'lib', 'main.js')
+        # appium2.0后，管理driver和plugin路径不在 node模块库里边，而默认在%userprofile%/.appium
+        # appium server --allow-cors
+
+
 
