@@ -15,7 +15,7 @@ from appuidriver import Cap
 
 class AppiumJs:
     """
-    仅适用于 grid <4, appium< 2
+    仅适用于 grid <4, appium< 2，因版本不兼容，rtsf-app v1.2.3 后而弃用,请使用AppiumNode
     """
     def __init__(self, port=4723, loglevel="info:info"):
         """

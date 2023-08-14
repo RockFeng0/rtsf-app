@@ -9,6 +9,7 @@ from appuidriver.remote.AppiumJs import AppiumJs
 from webuidriver.remote.SeleniumJar import SeleniumJar
 
 
+# 仅适用于 grid <4, appium< 2，因版本不兼容，rtsf-app v1.2.3 后而弃用,请使用AppiumNode
 class TestAppiumJs(unittest.TestCase):
 
     @classmethod
