@@ -100,6 +100,6 @@ if __name__ == "__main__":
     unittest.main()
     # suite = unittest.TestSuite()
     # suite.addTest(TestAndroid("test_gen_capabilities"))
-    # runner = unittest.TextTestRunner(verbosity=2)
-    # runner.run(suite)
+    # print(suite.countTestCases())
+    # # unittest.TextTestRunner(verbosity=2).run(suite)
 

@@ -5,6 +5,7 @@
 import appuidriver as webdriver
 from appuidriver import Cap, utils
 
+# 开启服务器，命令行:  appium server --allow-cors
 appium_server_url = 'http://localhost:4723'
 
 android_info = utils.android.detect_info()
