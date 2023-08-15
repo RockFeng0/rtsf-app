@@ -12,6 +12,7 @@ from adbutils._utils import APKReader
 from apkutils2.manifest import Manifest
 from apkutils2.axml.axmlparser import AXML
 
+from rtsf.p_exception import NotFoundError
 from rtsf.p_common import IntelligentWaitUtils
 
 
@@ -42,7 +43,7 @@ class _Devices:
         return json.dumps(self._devices)
 
 
-class _IOSDevices(object):
+class _IOSDevices(_Devices):
     """ Methods for ios system. """
     pass
 
@@ -181,11 +182,50 @@ class GridNodes(object):
         return
 
 
+def check_appium_installed():
+    """ parse npm command to get `node` and `appium` absolute path.
+    @note: node-npm just like python-pip
+    @note: 安装 appium命令行
+        1. 下载安装node.js, 默认安装后，设置了环境变量
+        2. 安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
+        3. 安装appium: cnpm install appium -g
+    # appium 1.x:
+    #   appium.cmd --command-timeout 120000 -p 4723 -U 127.0.0.1:6555 --no-reset
+    #   appium.cmd其实就是:  node "%appdata%\npm\node_modules\appium\build\lib\main.js" --command-timeout 120000 -p 4723 -U device_id_1
+    # appium2.0后，管理driver和plugin路径不在 node模块库里边，而默认在%userprofile%/.appium
+    #   appium server -p 4723 --allow-cors
+    """
+
+    regx_prefix = re.compile('.*prefix = (.*)')
+    with os.popen('npm config list') as f:
+        npm_config = f.readlines()
+
+    if not npm_config:
+        raise KeyError("Invalid command: `npm config list`. node.js should be installed before use npm command.")
+
+    # e.g. prefix = "C:\\Users\\RockFeng\\AppData\\Roaming\\npm"  npm本地安装路径的前缀
+    for line in npm_config:
+        found = regx_prefix.findall(line)
+        if found:
+            npm_prefix_path = found[0]
+            break
+
+    # npm list appium --depth=0 --global  查看是否安装 appium
+    regx_list_appium = re.compile('`-- (appium@.*)\n\n')
+    with os.popen('npm list appium --depth=0 --global') as f:
+        npm_list_appium = f.read()
+    versions = regx_list_appium.findall(npm_list_appium)
+    if not versions:
+        raise NotFoundError('Not foud js module: `appium`. Use command to install appium: cnpm install appium -g')
+    print("Success installed appium ", versions)
+
+
 android = _AndroidDevices()
 
 if __name__ == "__main__":
+    # check_appium_installed()
     # nodes = GridNodes()
     # print(nodes.list())
     print(android.detect_info())
-    print(android.current_activity())
-    print(android.parse_apk("/buffer/some.apk"))
+    # print(android.current_activity())
+    # print(android.parse_apk("/buffer/some.apk"))
