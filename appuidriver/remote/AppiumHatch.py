@@ -47,10 +47,6 @@ class Android(object):
         return "http://{}:{}".format(server_ip, server_port)  # appium 2.x
 
     @staticmethod
-    def get_remote_executors(hub_ip, port=4444):
-        return utils.GridNodes(hub_ip, port).list()
-
-    @staticmethod
     def gen_remote_driver(executor, capabilities):
         """ Generate remote drivers with desired capabilities(self.__caps) and command_executor
         @param executor: command executor for appium remote driver
@@ -60,3 +56,6 @@ class Android(object):
         firefox_profile = capabilities.pop("firefox_profile", None)
         return webdriver.Remote(command_executor=executor, desired_capabilities=capabilities, browser_profile=firefox_profile)
 
+    @staticmethod
+    def get_remote_executors(hub_ip, port=4444):
+        return utils.GridNodes(hub_ip, port).list()

@@ -4,8 +4,10 @@
 
 import unittest
 import os
+from appuidriver import Cap, utils
 from appuidriver.remote.AppiumHatch import Android
-from appuidriver.remote.AppiumJs import AppiumJs
+# from appuidriver.remote.AppiumJs import AppiumJs  # v1.2.3版本后弃用，请使用AppiumNonde
+from appuidriver.remote.AppiumNode import AppiumNode
 from webuidriver.remote.SeleniumJar import SeleniumJar
 
 
@@ -32,10 +34,10 @@ class TestAndroid(unittest.TestCase):
         self.assertEqual(desired_cap["appium:appActivity"], None)
 
         # e.g.2  without apk file
-        desired_cap = Android.gen_capabilities(app_package='io.appium.android.apis', app_activity='.animation.BouncingBalls')
+        desired_cap = Android.gen_capabilities(app_package='com.android.settings', app_activity='.Settings')
         self.assertEqual(desired_cap["appium:app"], None)
-        self.assertEqual(desired_cap["appium:appPackage"], 'io.appium.android.apis')
-        self.assertEqual(desired_cap["appium:appActivity"], '.animation.BouncingBalls')
+        self.assertEqual(desired_cap["appium:appPackage"], 'com.android.settings')
+        self.assertEqual(desired_cap["appium:appActivity"], '.Settings')
 
     def test_get_devices(self):
         devices = Android.get_devices()
@@ -48,52 +50,43 @@ class TestAndroid(unittest.TestCase):
             self.assertIsInstance(devices, dict)
 
     def test_gen_remote_driver(self):
-        server = AppiumJs(port=4723).bind_device(device_id="127.0.0.1:6555")
-        server.start_server()
+        # 连接设备, 配置capabilities
+        desired_cap = Cap().android.with_pkg(
+            package='com.android.settings',
+            activity='.Settings'
+        ).to_dict()
 
-        desired_cap = Android.gen_capabilities(apk_abs_path=self._apk_abs_path)
-        self.assertIsInstance(desired_cap, dict)
-
-        devices = Android.get_devices()
-        self.assertIsInstance(devices, list)
-
+        devices = utils.android.detect_info()
         desired_cap["deviceName"] = devices[0]["model"]
         desired_cap["platformVersion"] = devices[0]["android_version"]
 
-        driver = Android.gen_remote_driver(executor=Android.get_executor("localhost", 4723), capabilities=desired_cap)
+        # 配置节点
+        node = AppiumNode()
+        current_ip = "192.168.146.13"
+        file_save_to = r'C:\Python'
+
+        """ appium 2+ Grid 3
+        1. java -jar C:\Python\selenium-server-standalone-3.14.0.jar -role hub
+        2. appium server --nodeconfig C:\Python\nodeconfig.json --base-path=/wd/hub
+        """
+        # node.set_node_config(node_host=current_ip, file_path=file_save_to)
+        # print("Please manually start server with command: ", node.command)
+        # self.assertIsInstance(node.command, str)
+        # executor = Android.get_executor("localhost", 4723, base_url=True)
+        # driver = Android.gen_remote_driver(executor=executor, capabilities=desired_cap)
+        # driver.quit()
+
+        """ appium 2+ Grid 4
+        1. appium server -p 4723
+        2. java -jar C:\Python\selenium-server-4.11.0.jar hub --host 192.168.146.13
+        3. java -jar C:\Python\selenium-server-4.11.0.jar node --config C:\Python\node.toml
+        """
+        node.set_toml(appium_host=current_ip, file_path=file_save_to)
+        print("Please manually start server with command: ", node.command)
+        self.assertIsInstance(node.command, str)
+        executor = Android.get_executor("localhost", 4723, base_url=False)  # 没有base url
+        driver = Android.gen_remote_driver(executor=executor, capabilities=desired_cap)
         driver.quit()
-        server.stop_server()
-
-    def test_gen_remote_driver_grid(self):
-        self._hub.start_server()
-
-        device_name = "127.0.0.1:6555"
-        device_version = "4.4.4"
-        node_ip = "localhost"
-        port = 4723
-        # todo 调试
-        server = AppiumJs(port = port).bind_device(device_id = device_name, platform_version = device_version).node(node_ip, hub_address=("localhost", 4444))
-        server.start_server()
-
-        drivers = []
-        desired_cap = Android.gen_capabilities(apk_abs_path = self._apk_abs_path, aapt_exe_4path = self._aapt_exe_path)
-        executors = Android.get_remote_executors(hub_ip = "localhost", port = 4444)
-        for udid, udversion, executor in executors:
-            cap = desired_cap.copy()
-            cap["deviceName"] = udid
-            cap["platformVersion"] = udversion
-
-            driver = Android.gen_remote_driver(executor = executor, capabilities = cap)
-            drivers.append(driver)
-            driver.quit()
-
-        self.assertEqual(len(drivers), 1)
-        self.assertEqual(udid, device_name)
-        self.assertEqual(udversion, device_version)
-        self.assertEqual(executor, "http://{}:{}/wd/hub".format(node_ip, port))
-
-        server.stop_server()
-        self._hub.stop_server()
 
 
 if __name__ == "__main__":
