@@ -3,8 +3,8 @@
 
 import re
 from rtsf.p_executer import Runner
-from rtsf.p_common import CommonUtils,ModuleUtils,FileSystemUtils
-from rtsf.p_exception import FunctionNotFound,VariableNotFound
+from rtsf.p_common import CommonUtils, ModuleUtils, FileSystemUtils
+from rtsf.p_exception import FunctionNotFound, VariableNotFound
 from appuidriver.remote.AppiumHatch import Android
 
 
@@ -131,8 +131,6 @@ class _Driver(Runner):
 class LocalDriver(_Driver):
     """O-O one local pc that running one appium connect one devices"""
 
-    _adb_exe_path = 'adb'
-    _aapt_exe_path = 'aapt'
     _apk_abs_path = None
     _app_package = None
     _app_activity = None
@@ -143,13 +141,12 @@ class LocalDriver(_Driver):
             apk_abs_path=LocalDriver._apk_abs_path,
             app_package=LocalDriver._app_package,
             app_activity=LocalDriver._app_activity,
-            aapt_exe_4path=LocalDriver._aapt_exe_path
         )
 
-        devices = Android.get_devices(LocalDriver._adb_exe_path)
-        device_id, properties = devices.popitem()
-        desired_cap["deviceName"] = device_id
-        desired_cap["platformVersion"] = properties.get('android_version')
+        devices = Android.get_devices()
+        item = devices[0]
+        desired_cap["deviceName"] = item.get("serial")
+        desired_cap["platformVersion"] = item.get('android_version')
 
         self._default_drivers = [
             ("", Android.gen_remote_driver(executor=Android.get_executor("localhost", 4723), capabilities=desired_cap))
@@ -158,7 +155,7 @@ class LocalDriver(_Driver):
 
 class RemoteDriver(_Driver):
     """M-M some pc that running some appium connect some devices, each pc at most 20 devices"""
-    _aapt_exe_path = 'aapt'
+
     _apk_abs_path = None
     _app_package = None
     _app_activity = None
@@ -171,12 +168,12 @@ class RemoteDriver(_Driver):
         desired_cap = Android.gen_capabilities(
             apk_abs_path=RemoteDriver._apk_abs_path,
             app_package=RemoteDriver._app_package,
-            app_activity=RemoteDriver._app_activity,
-            aapt_exe_4path=RemoteDriver._aapt_exe_path
+            app_activity=RemoteDriver._app_activity
         )
         self._default_devices = []
         self._default_drivers = []
         executors = Android.get_remote_executors(hub_ip=RemoteDriver._remote_ip, port=RemoteDriver._remote_port)
+
         for udid, udversion, executor in executors:
             fn = FileSystemUtils.get_legal_filename(executor)
             self._default_devices.append(fn)
