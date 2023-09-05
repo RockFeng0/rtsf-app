@@ -10,9 +10,9 @@
    
 [查看rtsf项目用法](https://github.com/RockFeng0/rtsf)
 
-# 环境准备
+## 环境准备
 
-## window安装 appium.js
+### window安装 appium.js
 1. [下载安装node.js](https://nodejs.org/en)
 2. 管理员权限，执行命令，安装cnpm: npm install -g cnpm --registry=https://registry.npm.taobao.org
 3. 管理员权限，执行命令，安装appium: cnpm install appium -g
@@ -23,7 +23,7 @@
 命令启动，appium-server实例：
 ![appium-cmd.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/appium-cmd.png)
 
-## 设置ANDROID_HOME环境变量
+### 设置ANDROID_HOME环境变量
 1. [下载simple_android_home](https://github.com/RockFeng0/rtsf-app/releases/tag/v1.0.39)
 2. 解压文件android_home.zip，新增环境变量 ANDROID_HOME，为解压后的根目录的路径
 3. 在环境变量path中，追加 %ANDROID_HOME%\platform-tools
@@ -33,14 +33,97 @@
 rtsf-app依赖的两个命令，如图：
 ![android-tools.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/android-tools.png)
 
-## 下载selenium-server-standalone.jar
+### Selenium Grid
 
 > 参见[rtsf-web](https://github.com/RockFeng0/rtsf-web)项目，环境准备栏，给出的下载链接
 
-## 安装rtsf-app
+### 安装rtsf-app
 pip install rtsf-app 
 
-# 命令介绍
+
+## 简单使用
+
+1. appium server
+```python
+# start appium server with cmd:  appium server --allow-cors
+import appuidriver as webdriver
+from appuidriver import Cap, utils
+
+android_info = utils.android.detect_info()  # 探测android设备信息
+pkg_info = utils.android.current_activity()  # 获取当前应用的包信息
+print("package info:", pkg_info.package, pkg_info.activity)
+
+cap = Cap().android.with_pkg(
+    package="com.android.settings",  # pkg_info.package
+    activity=".Settings"  # pkg_info.activity
+)
+
+print("capabilities info:", cap.to_json())
+driver = webdriver.Remote("http://localhost:4723", cap.to_dict())
+
+elm = driver.until_find.element_by_android_uiautomation('new UiSelector().text("WLAN")')
+elm.click()
+
+elm = driver.until_find.element_by_xpath('//android.widget.ImageButton[@content-desc="Menu"]')
+elm.click()
+driver.quit()
+```
+
+2. appium 2.0+ 和 Grid 3
+```python
+# 1. java -jar C:\Python\selenium-server-standalone-3.14.0.jar -role hub
+# 2. appium server --nodeconfig C:\Python\nodeconfig.json --base-path=/wd/hub
+        
+import appuidriver as webdriver
+from appuidriver import Cap
+from appuidriver.remote.AppiumNode import AppiumNode
+node = AppiumNode()
+node.set_node_config(node_host="192.168.146.13", file_path=r'C:\Python')
+print("Please manually start server with command: ", node.command)
+
+# webdriver.Remote  注意: appium2.0连接grid3要base path,所以command_executor也需要/wd/hub
+cap = Cap().android.with_pkg(
+    package="com.android.settings",
+    activity=".Settings"
+).to_dict()
+driver = webdriver.Remote(command_executor="http://localhost:4723/wd/hub", desired_capabilities=cap)
+driver.quit()
+
+```
+
+3. appium 2.0+ 和 Grid 4
+```python
+# 1. appium server -p 4723
+# 2. java -jar C:\Python\selenium-server-4.11.0.jar hub --host 192.168.146.13
+# 3. java -jar C:\Python\selenium-server-4.11.0.jar node --config C:\Python\node.toml
+import appuidriver as webdriver
+from appuidriver import Cap, utils
+from appuidriver.remote.AppiumNode import AppiumNode
+node = AppiumNode()
+node.set_toml(appium_host="192.168.146.13", file_path=r'C:\Python')
+print("Please manually start server with command: ", node.command)
+
+# webdriver.Remote
+cap = Cap().android.with_pkg(
+    package="com.android.settings",
+    activity=".Settings"
+).to_dict()
+devices = utils.android.detect_info()
+cap["deviceName"] = devices[0]["model"]
+cap["platformVersion"] = devices[0]["android_version"]
+# Warning: loopback ip not suggest to use in grid mode
+driver = webdriver.Remote(command_executor="http://192.168.146.13:4444", desired_capabilities=cap)
+driver.quit()
+
+```
+
+
+## 详细介绍
+介绍如何使用rtsf-app进行YAML格式app UI的自动化测试用例编写，rtsf-app是rtsf框架的插件，所以，基本遵循rtsf的YAML格式约定。    
+   
+[查看rtsf项目用法](https://github.com/RockFeng0/rtsf)
+
+## 命令介绍
 
 安装完成后，有两个命令用于执行yaml测试用例: 
 - aldriver命令，android localhost driver，一般情况下，都是用这个命令执行yaml用例
@@ -53,7 +136,7 @@ pip install rtsf-app
 安装完成后，有一个工具命令：
 - ainfo命令， 用于查看PC连接的android设备信息，以及查看待测试apk的报信息
 
-## ainfo
+### ainfo
 1. 查看设备信息，其中注意关注， device_id 和  android_version(android device platform version)
 
 格式为dict -> {device_id: {...}, device_id: {...}, 。。。} 
@@ -75,12 +158,12 @@ pip install rtsf-app
 ainfo命令实例：
 ![ainfo-cmd.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/ainfo-cmd.png)
 
-## wrhub
+### wrhub
 如果有，并行的测试需求，我们会用到Grid模式，wrhub开启一个grid hub，允许不同测试node节点的接入
 
 具体参见[rtsf-web](https://github.com/RockFeng0/rtsf-web)
 
-## appserver
+### appserver
 
 1. appserver提供简单的命令，为每一个待测试的手机，绑定一个端口，通过该端口，我们的测试用例，可以准确下发测试任务
 2. appserver在绑定手机的同时，可以作为grid node接入grid模式
@@ -98,7 +181,7 @@ ainfo命令实例：
 appserver命令参数
 ![appserver-h.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/appserver-h.png)
 
-## aldriver
+### aldriver
 1. aldriver命令执行本地测试，该命令主动连接本地的4723端口，并驱动adb连接的第一个设备进行测试
 
 查看帮助: aldriver -h
@@ -112,7 +195,7 @@ aldriver命令参数:
 
 ![aldriver-h.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/aldriver-h.png)
 
-## ardriver
+### ardriver
 1. ardriver命令执行grid模式下，远程并行测试
 
 注意:
@@ -124,7 +207,7 @@ ardriver命令参数:
 
 ![ardriver-h.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/ardriver-h.png)
 
-# rtsf-app的约定
+## rtsf-app的约定
 
 依据rtsf的yaml约定模板，我们在steps中，为rtsf-app约定了一个规则，以便识别为Android UI自动化测试， 如下
 
@@ -144,7 +227,7 @@ steps:
 NativeApp的话，支持：("id","xpath","class name",'-android uiautomator')，
 WebView的话，支持selenium所用方式
 
-# rtsf-app常用的yaml函数
+## rtsf-app常用的yaml函数
 
 <!-- 注释， 不建议 使用 SetControl定位元素
 
@@ -183,7 +266,7 @@ WebView的话，支持selenium所用方式
 -->
 
 
-## App functions --> android设备-测试相关常用操作
+### App functions --> android设备-测试相关常用操作
 
 ```
 LaunchApp()                                     # use current session to launch and active the app        
@@ -202,7 +285,7 @@ CloseApp()                                      # only close app . keep the sess
 QuitApp()                                       # will close the session
 ```
 
-## AppContext methods --> 用于上下文管理
+### AppContext methods --> 用于上下文管理
 ```
 DyAttrData(name,attr)                       # -> 属性-动态存储变量，适用于，保存UI元素属性值。name-变量名称，attr为UI元素的属性名称，**配合SetControl使用**
 DyActivityData(name)                        # -> 使用变量,保存当前app activity name
@@ -214,7 +297,7 @@ GetVar(name)                                # -> 获取指定变量的值
 SetVar(name,value)                          # -> 设置指定变量的值
 ```
 
-## AppWait methods --> 用于时间的控制
+### AppWait methods --> 用于时间的控制
 ```
 TimeSleep(seconds)                   # -> 指定等待时间(秒钟)
 WaitForAppearing()                   # -> 等待元素出现(可能是隐藏，不可见的)，**配合SetControl使用**
@@ -222,7 +305,7 @@ WaitForDisappearing()                # -> 等待元素消失，**配合SetContro
 WaitForVisible()                     # -> 等待元素可见，**配合SetControl使用**
 ```
         
-## AppVerify methods --> 用于验证
+### AppVerify methods --> 用于验证
 ```
 VerifyVar(name, expect_value)                # -> 验证变量值，是期望的expect_value，返回True，否则返回False
 VerifyAppInstalled(app_package)              # -> 验证app package name已经安装
@@ -236,7 +319,7 @@ VerifyElemAttr(attr_name,expect_value)       # -> 验证元素属性attr_name的
 VerifyElemCounts(num)                        # -> 验证元素数量为num,**配合SetControl使用**
 ```
 
-## AppTouchAction methods --> 用于Android触摸操作
+### AppTouchAction methods --> 用于Android触摸操作
 ```
 Tap()                        # -> 在指定元素上，轻触点击 1次，**配合SetControl使用**
 LongPress()                  # -> 在指定元素上，长按，**配合SetControl使用**
@@ -247,7 +330,7 @@ Draw()                       # -> 在当前activity中，画画
 Swipe(direction, times)      # -> 在当前activity中，滑动.direction滑动方向: up, down, left, right; times滑动次数，默认1次
 ```
 
-## AppActions methods --> 用于Android常规操作
+### AppActions methods --> 用于Android常规操作
 ```
 Pinch()                      # -> 在指定元素上缩小，**配合SetControl使用**
 Zoom()                       # -> 在指定元素上放大，**配合SetControl使用**
@@ -257,19 +340,19 @@ click()                      # -> 在指定元素上，点击左键一次，**�
 
 > AppTouchAction和AppActions，封装较少的原因是考虑到Appium继承了selenium,因此有些appium提供的方法中,并不会同时兼容NativeApp和WebviewApp，同时，[rtsf-web](https://github.com/RockFeng0/rtsf-web)项目已经支持了selenium对web ui的测试。
 
-# 自定义，yaml函数和变量
+## 自定义，yaml函数和变量
 
 在case同级目录中，创建 preference.py, 该文件所定义的 变量、函数，可以被动态加载和引用， 具体参见rtsf的介绍
 
-# 数据驱动与分层用例
+## 数据驱动与分层用例
 
 在[rtsf](https://github.com/RockFeng0/rtsf)项目中，已经有了详细的介绍，rtsf-web也适用
 
-# 场景实例
+## 场景实例
 
 依据rtsf和rtsf-app的约定， 做了几个app ui测试的示例
 
-## 简单实例
+### 简单实例
 
 1. 编写一个yaml文件
 
@@ -415,7 +498,7 @@ aldriver C:\test_case.yaml --apk C:\ApiDemos-debug.apk --package io.appium.andro
 场景一实例:
 ![scene-1.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-app-img/scene-1.png)
 
-## 场景二 远程控制测试-Selenium Grid Mode
+### 场景二 远程控制测试-Selenium Grid Mode
 
 1.测试背景及分析
 
@@ -500,10 +583,7 @@ appserver 192.168.1.2:4723 --device-name 127.0.0.1:6555 --device-version 4.4.4 -
 
 ```
 
-# 获取控件的工具
-1. 如果是WebviewApp项目，工具推荐，就参考rtsf-web项目
-2. 如果是NativeApp项目，您需要安装Android SDK, tools目录下，两个工具可以用于定位app元素:
-    - uiautomatorviewer
-    - hierarchyviewer
-
-暂时没有 找到轻量好用的，用于定位的工具，如果您知道，请赐教
+## Appium Inspector 元素探测
+appium-inspector插件两种访问方式
+1. 可以直接去官方下载客户端(https://github.com/appium/appium-inspector/releases)
+2. 访问web端(https://inspector.appiumpro.com/)
